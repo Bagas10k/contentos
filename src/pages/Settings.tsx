@@ -296,21 +296,18 @@ export default function Settings() {
 
   // Appearance state
   const [appearance, setAppearance] = useState(() => {
+    const defaults = {
+      theme: 'auto',
+      density: 'standard',
+      font: 'inter',
+      sidebar: 'standard',
+      mobileNav: 'drawer',
+    };
     try {
       const stored = localStorage.getItem('contentos_appearance');
-      return stored ? JSON.parse(stored) : {
-        theme: 'auto',
-        density: 'standard',
-        font: 'inter',
-        sidebar: 'standard',
-      };
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
     } catch {
-      return {
-        theme: 'auto',
-        density: 'standard',
-        font: 'inter',
-        sidebar: 'standard',
-      };
+      return defaults;
     }
   });
 
@@ -1560,6 +1557,38 @@ export default function Settings() {
                       onClick={() => handleUpdateAppearance('sidebar', item.id)}
                     >
                       <Columns size={20} className="mb-2" style={{ color: active ? 'var(--color-blue)' : 'var(--text-secondary)', transform: item.id === 'compact' ? 'scaleX(0.7)' : 'none' }} />
+                      <span className="text-xs font-semibold block mb-0.5" style={{ color: 'var(--text-primary)' }}>{item.label}</span>
+                      <span className="text-[10px]" style={{ color: 'var(--text-quaternary)', lineHeight: 1.2 }}>{item.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile Navigation Style Panel */}
+            <div className="card p-5">
+              <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Gaya Navigasi Mobile</h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-quaternary)' }}>
+                Pilih gaya navigasi saat aplikasi diakses lewat perangkat mobile (HP).
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { id: 'drawer', label: 'Laci Geser (Drawer)', desc: 'Menu samping dengan tombol hamburger atas' },
+                  { id: 'bottom', label: 'Bilah Bawah (Bottom Bar)', desc: 'Navigasi cepat di bawah seperti Instagram/WA' },
+                ].map((item) => {
+                  const active = (appearance.mobileNav || 'drawer') === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="flex flex-col items-center justify-center p-4 rounded-ios border text-center transition-all hover-bg-subtle"
+                      style={{
+                        background: active ? 'rgba(0,122,255,0.06)' : 'var(--bg-surface)',
+                        borderColor: active ? 'var(--color-blue)' : 'var(--border-color)',
+                      }}
+                      onClick={() => handleUpdateAppearance('mobileNav', item.id)}
+                    >
+                      <Smartphone size={20} className="mb-2" style={{ color: active ? 'var(--color-blue)' : 'var(--text-secondary)' }} />
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: 'var(--text-primary)' }}>{item.label}</span>
                       <span className="text-[10px]" style={{ color: 'var(--text-quaternary)', lineHeight: 1.2 }}>{item.desc}</span>
                     </button>

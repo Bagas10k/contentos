@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, NavLink } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { ToastProvider, toast } from './components/ui/Toast';
 import { useAppStore } from './store/appStore';
@@ -14,7 +14,7 @@ import LocalNetwork from './pages/LocalNetwork';
 import Tasks from './pages/Tasks';
 import { DynamicIsland } from './components/layout/DynamicIsland';
 import { AnnouncementModal } from './components/content/AnnouncementModal';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, LayoutDashboard, Library, Kanban, Calendar, ClipboardList } from 'lucide-react';
 
 function TitleUpdater() {
   const location = useLocation();
@@ -39,6 +39,32 @@ function TitleUpdater() {
   }, [location.pathname, ws]);
 
   return null;
+}
+
+function BottomNav() {
+  const navItems = [
+    { to: '/',         icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/bank',     icon: Library,         label: 'Bank'      },
+    { to: '/kanban',   icon: Kanban,          label: 'Kanban'    },
+    { to: '/calendar', icon: Calendar,        label: 'Kalender'  },
+    { to: '/tasks',    icon: ClipboardList,   label: 'Tugas'     },
+  ];
+
+  return (
+    <nav className="bottom-nav">
+      {navItems.map(({ to, icon: Icon, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={to === '/'}
+          className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Icon size={20} className="bottom-nav-icon" />
+          <span>{label}</span>
+        </NavLink>
+      ))}
+    </nav>
+  );
 }
 
 export default function App() {
@@ -123,6 +149,7 @@ export default function App() {
           density: 'standard',
           font: 'inter',
           sidebar: 'standard',
+          mobileNav: 'drawer',
         };
 
         const root = document.documentElement;
@@ -144,6 +171,9 @@ export default function App() {
 
         // Sidebar style
         root.setAttribute('data-sidebar', config.sidebar || 'standard');
+
+        // Mobile Nav style
+        root.setAttribute('data-mobile-nav', config.mobileNav || 'drawer');
       } catch (e) {
         console.error('Failed to apply appearance settings:', e);
       }
@@ -412,6 +442,7 @@ export default function App() {
             <Route path="/tasks"     element={<Tasks />} />
           </Routes>
         </main>
+        <BottomNav />
       </div>
 
       <AnnouncementModal />

@@ -186,19 +186,27 @@
 :root[data-sidebar="compact"] { --sidebar-width: 72px; }
 :root[data-sidebar="compact"] .sidebar .font-bold.text-sm,
 :root[data-sidebar="compact"] .sidebar .text-xs,
+:root[data-sidebar="compact"] .sidebar .text-\[11px\],
+:root[data-sidebar="compact"] .sidebar .text-\[10px\],
 :root[data-sidebar="compact"] .sidebar .text-left,
-:root[data-sidebar="compact"] .sidebar p.text-xs,
+:root[data-sidebar="compact"] .sidebar p,
 :root[data-sidebar="compact"] .sidebar span:not(.w-8):not(.w-7),
+:root[data-sidebar="compact"] .sidebar .flex-1.min-w-0,
+:root[data-sidebar="compact"] .sidebar .min-w-0,
+:root[data-sidebar="compact"] .sidebar button[title="Keluar / Logout"],
 :root[data-sidebar="compact"] .sidebar .chevron-down { display: none !important; }
 :root[data-sidebar="compact"] .sidebar .nav-item { justify-content: center; padding: 10px 0; width: 44px; margin: 0 auto; }
 :root[data-sidebar="compact"] .sidebar .px-4.py-5 { padding: 16px 0 !important; display: flex; justify-content: center; }
+:root[data-sidebar="compact"] .sidebar .px-4.py-5 .flex.items-center.gap-3 { justify-content: center; gap: 0 !important; }
+:root[data-sidebar="compact"] .sidebar .px-4.py-5 .flex.items-center.gap-3 > div:last-child { display: none !important; }
 :root[data-sidebar="compact"] .sidebar .px-3.py-3 { padding: 12px 0 !important; }
 :root[data-sidebar="compact"] .sidebar .logo-container { justify-content: center; }
 :root[data-sidebar="compact"] .sidebar .flex-shrink-0 { margin: 0 auto; }
-:root[data-sidebar="compact"] .sidebar button.w-full { justify-content: center; padding: 8px 0; width: 44px; margin: 0 auto; }
+:root[data-sidebar="compact"] .sidebar button.w-full { justify-content: center; padding: 6px 0 !important; gap: 0 !important; width: 44px; margin: 0 auto; }
 :root[data-sidebar="compact"] .sidebar .px-4.py-4 { padding: 12px 0 !important; }
-:root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between { justify-content: center; }
-:root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between button { display: flex !important; margin: 0 auto; }
+:root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between { justify-content: center; gap: 0 !important; }
+:root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between button { display: none !important; }
+:root[data-sidebar="compact"] .sidebar .flex.items-center.gap-2\.5 { justify-content: center; gap: 0 !important; }
 :root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between .min-w-0 { display: none !important; }
 
 /* ─── Base ──────────────────────────────────────────────── */
@@ -763,6 +771,7 @@ textarea.input { resize: vertical; min-height: 80px; }
   .sidebar {
     transform: translateX(-100%);
     box-shadow: none;
+    z-index: 100;
   }
   .sidebar.open {
     transform: translateX(0);
@@ -777,7 +786,7 @@ textarea.input { resize: vertical; min-height: 80px; }
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    z-index: 45;
+    z-index: 95;
   }
   .topbar { padding: 0 16px; }
 }
@@ -831,3 +840,81 @@ body.has-dynamic-island .sidebar { padding-top: 24px !important; }
 
 /* ─── iOS Radius Alias ───────────────────────────────────── */
 .rounded-ios { border-radius: var(--radius-ios) !important; }
+
+/* ─── Bottom Navigation Mobile (WA/IG Style) ──────────────── */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  :root[data-mobile-nav="bottom"] .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px)) 12px;
+    z-index: 90;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+  }
+
+  /* When bottom nav is active, we add a bottom padding to the main area */
+  :root[data-mobile-nav="bottom"] .main-area {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Stylings for each bottom nav item */
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: var(--text-quaternary);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    gap: 3px;
+    transition: all 0.2s var(--ease-smooth);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .bottom-nav-item .bottom-nav-icon {
+    transition: transform 0.2s var(--ease-spring);
+  }
+
+  /* Active State styling */
+  .bottom-nav-item.active {
+    color: var(--color-blue);
+  }
+
+  .bottom-nav-item.active .bottom-nav-icon {
+    transform: scale(1.12);
+    color: var(--color-blue);
+  }
+
+  /* Dot indicator underneath active item */
+  .bottom-nav-item::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: transparent;
+    transition: all 0.2s ease;
+    margin-top: 1px;
+  }
+
+  .bottom-nav-item.active::after {
+    background: var(--color-blue);
+  }
+}
