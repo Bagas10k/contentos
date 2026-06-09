@@ -190,8 +190,37 @@ function createAutoBackup() {
   }
 }
 
+// ================= LOGIN RATE LIMITER (In-Memory) =================
+const loginAttempts = new Map();
+
+const loginRateLimiter = (req, res, next) => {
+  const ip = getCleanIp(req.headers['x-forwarded-for'] || req.socket.remoteAddress);
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes
+  const maxAttempts = 5;
+
+  const clientAttempts = loginAttempts.get(ip) || [];
+  // Filter attempts within the window
+  const recentAttempts = clientAttempts.filter(timestamp => now - timestamp < windowMs);
+
+  if (recentAttempts.length >= maxAttempts) {
+    const oldestAttempt = recentAttempts[0];
+    const msLeft = windowMs - (now - oldestAttempt);
+    const minLeft = Math.ceil(msLeft / 60000);
+    return res.status(429).json({
+      success: false,
+      message: `Terlalu banyak percobaan login gagal. Alamat IP Anda diblokir sementara. Silakan coba lagi dalam ${minLeft} menit.`
+    });
+  }
+
+  // Save the current attempt timestamp
+  recentAttempts.push(now);
+  loginAttempts.set(ip, recentAttempts);
+  next();
+};
+
 // Endpoint: Login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', loginRateLimiter, (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -207,6 +236,10 @@ app.post('/api/login', (req, res) => {
     if (!validPassword) {
       return res.status(401).json({ success: false, message: 'Username atau password salah.' });
     }
+
+    // Reset rate limiter attempts on successful login
+    const clientIp = getCleanIp(req.headers['x-forwarded-for'] || req.socket.remoteAddress);
+    loginAttempts.delete(clientIp);
 
     const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30m' });
     return res.json({

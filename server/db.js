@@ -8,6 +8,7 @@ const JSON_DB_PATH = path.join(__dirname, 'db.json');
 
 // Initialize database connection (using let instead of const so we can reopen)
 let db = new DatabaseSync(DB_PATH);
+db.exec('PRAGMA journal_mode = WAL;');
 
 // Initialize schema
 function initSchema() {
@@ -418,6 +419,7 @@ function closeDatabase() {
 
 function reopenDatabase() {
   db = new DatabaseSync(DB_PATH);
+  db.exec('PRAGMA journal_mode = WAL;');
 }
 
 function createActivityLog(id, username, action, targetName, details, timestamp) {
