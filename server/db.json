@@ -1,0 +1,524 @@
+{
+  "activeWorkspaceId": "w1",
+  "workspaces": [
+    {
+      "id": "w1",
+      "name": "Bisnis Utama",
+      "color": "#007AFF",
+      "emoji": "🚀",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "w2",
+      "name": "Personal Brand",
+      "color": "#E1306C",
+      "emoji": "✨",
+      "createdAt": "2026-02-01T00:00:00Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat1",
+      "workspaceId": "w1",
+      "name": "Edukasi Tech",
+      "color": "#007AFF"
+    },
+    {
+      "id": "cat2",
+      "workspaceId": "w1",
+      "name": "Behind The Scene",
+      "color": "#FF9500"
+    },
+    {
+      "id": "cat3",
+      "workspaceId": "w1",
+      "name": "Tips & Tricks",
+      "color": "#34C759"
+    },
+    {
+      "id": "cat4",
+      "workspaceId": "w1",
+      "name": "Product Review",
+      "color": "#AF52DE"
+    },
+    {
+      "id": "cat5",
+      "workspaceId": "w1",
+      "name": "Story Time",
+      "color": "#FF2D55"
+    },
+    {
+      "id": "cat6",
+      "workspaceId": "w2",
+      "name": "Lifestyle",
+      "color": "#E1306C"
+    },
+    {
+      "id": "cat7",
+      "workspaceId": "w2",
+      "name": "OOTD",
+      "color": "#FF6B6B"
+    },
+    {
+      "id": "cat8",
+      "workspaceId": "w2",
+      "name": "Travel",
+      "color": "#5856D6"
+    }
+  ],
+  "contentItems": [
+    {
+      "id": "item1",
+      "workspaceId": "w1",
+      "title": "Cara Coding Pake AI untuk Pemula",
+      "categoryId": "cat1",
+      "status": "Published",
+      "scheduleDate": "2026-06-01",
+      "platform": "TikTok",
+      "notes": "Referensi audio tren TikTok",
+      "performance": {
+        "views": 45000,
+        "likes": 3200,
+        "comments": 185,
+        "shares": 420
+      },
+      "createdAt": "2026-05-25T10:00:00Z",
+      "updatedAt": "2026-06-01T00:00:00Z"
+    },
+    {
+      "id": "item2",
+      "workspaceId": "w1",
+      "title": "Review MacBook Pro M3 Pro Setelah 3 Bulan",
+      "categoryId": "cat4",
+      "status": "Ready to Post",
+      "scheduleDate": "2026-06-07",
+      "platform": "TikTok",
+      "notes": "Edit dulu intro-nya",
+      "createdAt": "2026-06-01T10:00:00Z",
+      "updatedAt": "2026-06-03T00:00:00Z"
+    },
+    {
+      "id": "item3",
+      "workspaceId": "w1",
+      "title": "Rutinitas Pagi Sebelum Kerja",
+      "categoryId": "cat2",
+      "status": "Editing",
+      "scheduleDate": "2026-06-10",
+      "platform": "TikTok",
+      "createdAt": "2026-06-02T10:00:00Z",
+      "updatedAt": "2026-06-04T00:00:00Z"
+    },
+    {
+      "id": "item4",
+      "workspaceId": "w1",
+      "title": "5 Tool AI yang Bikin Kerja 10x Lebih Cepat",
+      "categoryId": "cat3",
+      "status": "Scripting",
+      "scheduleDate": "2026-06-14",
+      "platform": "TikTok",
+      "notes": "Riset tools terbaru dulu",
+      "createdAt": "2026-06-03T10:00:00Z",
+      "updatedAt": "2026-06-05T00:00:00Z"
+    },
+    {
+      "id": "item5",
+      "workspaceId": "w1",
+      "title": "Cerita Gagal Startup Pertamaku",
+      "categoryId": "cat5",
+      "status": "Idea",
+      "platform": "TikTok",
+      "createdAt": "2026-06-04T10:00:00Z",
+      "updatedAt": "2026-06-04T00:00:00Z"
+    },
+    {
+      "id": "item6",
+      "workspaceId": "w1",
+      "title": "Behind The Scene Pembuatan Video Viral",
+      "categoryId": "cat2",
+      "status": "Production",
+      "scheduleDate": "2026-06-18",
+      "platform": "TikTok",
+      "createdAt": "2026-06-05T10:00:00Z",
+      "updatedAt": "2026-06-05T00:00:00Z"
+    },
+    {
+      "id": "item7",
+      "workspaceId": "w1",
+      "title": "Cara Dapet Client Pertama sebagai Freelancer",
+      "categoryId": "cat3",
+      "status": "Published",
+      "scheduleDate": "2026-05-20",
+      "platform": "TikTok",
+      "performance": {
+        "views": 28000,
+        "likes": 1900,
+        "comments": 97,
+        "shares": 210
+      },
+      "createdAt": "2026-05-15T10:00:00Z",
+      "updatedAt": "2026-05-20T00:00:00Z"
+    },
+    {
+      "id": "item8",
+      "workspaceId": "w2",
+      "title": "Morning Skincare Routine 2026",
+      "categoryId": "cat6",
+      "status": "Published",
+      "scheduleDate": "2026-06-02",
+      "platform": "Instagram",
+      "performance": {
+        "views": 12000,
+        "likes": 980,
+        "comments": 64,
+        "saves": 340
+      },
+      "createdAt": "2026-05-28T10:00:00Z",
+      "updatedAt": "2026-06-02T00:00:00Z"
+    },
+    {
+      "id": "item9",
+      "workspaceId": "w2",
+      "title": "OOTD Summer Vibes",
+      "categoryId": "cat7",
+      "status": "Ready to Post",
+      "scheduleDate": "2026-06-08",
+      "platform": "Instagram",
+      "createdAt": "2026-06-04T10:00:00Z",
+      "updatedAt": "2026-06-05T00:00:00Z"
+    }
+  ],
+  "analyticsHistory": [
+    {
+      "id": "a1",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-01-01",
+      "followers": 1500,
+      "totalViews": 25000,
+      "avgEngagementRate": 4.2
+    },
+    {
+      "id": "a2",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-02-01",
+      "followers": 2000,
+      "totalViews": 37000,
+      "avgEngagementRate": 4.8
+    },
+    {
+      "id": "a3",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-03-01",
+      "followers": 2800,
+      "totalViews": 52000,
+      "avgEngagementRate": 5.1
+    },
+    {
+      "id": "a4",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-04-01",
+      "followers": 3900,
+      "totalViews": 78000,
+      "avgEngagementRate": 5.6
+    },
+    {
+      "id": "a5",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-05-01",
+      "followers": 4900,
+      "totalViews": 110000,
+      "avgEngagementRate": 6
+    },
+    {
+      "id": "a6",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-06-01",
+      "followers": 5800,
+      "totalViews": 145000,
+      "avgEngagementRate": 6.4
+    },
+    {
+      "id": "ai1",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-01-01",
+      "followers": 800,
+      "totalViews": 20000,
+      "avgEngagementRate": 4
+    },
+    {
+      "id": "ai2",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-02-01",
+      "followers": 1100,
+      "totalViews": 30000,
+      "avgEngagementRate": 4.5
+    },
+    {
+      "id": "ai3",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-03-01",
+      "followers": 1400,
+      "totalViews": 46000,
+      "avgEngagementRate": 5
+    },
+    {
+      "id": "ai4",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-04-01",
+      "followers": 1900,
+      "totalViews": 64000,
+      "avgEngagementRate": 5.5
+    },
+    {
+      "id": "ai5",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-05-01",
+      "followers": 2300,
+      "totalViews": 79000,
+      "avgEngagementRate": 5.9
+    },
+    {
+      "id": "ai6",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-06-01",
+      "followers": 3100,
+      "totalViews": 89000,
+      "avgEngagementRate": 6.2
+    },
+    {
+      "id": "b1",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-01-01",
+      "followers": 700,
+      "totalViews": 10000,
+      "avgEngagementRate": 5.2
+    },
+    {
+      "id": "b2",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-02-01",
+      "followers": 1100,
+      "totalViews": 16000,
+      "avgEngagementRate": 5.8
+    },
+    {
+      "id": "b3",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-03-01",
+      "followers": 1600,
+      "totalViews": 24000,
+      "avgEngagementRate": 6.1
+    },
+    {
+      "id": "b4",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-04-01",
+      "followers": 2100,
+      "totalViews": 33000,
+      "avgEngagementRate": 6.5
+    },
+    {
+      "id": "b5",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-05-01",
+      "followers": 2500,
+      "totalViews": 41000,
+      "avgEngagementRate": 7
+    },
+    {
+      "id": "b6",
+      "workspaceId": "w2",
+      "platform": "Instagram",
+      "date": "2026-06-01",
+      "followers": 2900,
+      "totalViews": 49000,
+      "avgEngagementRate": 7.3
+    },
+    {
+      "id": "bi1",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-01-01",
+      "followers": 500,
+      "totalViews": 8000,
+      "avgEngagementRate": 5
+    },
+    {
+      "id": "bi2",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-02-01",
+      "followers": 700,
+      "totalViews": 11000,
+      "avgEngagementRate": 5.4
+    },
+    {
+      "id": "bi3",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-03-01",
+      "followers": 1000,
+      "totalViews": 15000,
+      "avgEngagementRate": 6
+    },
+    {
+      "id": "bi4",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-04-01",
+      "followers": 1300,
+      "totalViews": 19000,
+      "avgEngagementRate": 6.2
+    },
+    {
+      "id": "bi5",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-05-01",
+      "followers": 1600,
+      "totalViews": 23000,
+      "avgEngagementRate": 6.5
+    },
+    {
+      "id": "bi6",
+      "workspaceId": "w2",
+      "platform": "TikTok",
+      "date": "2026-06-01",
+      "followers": 1900,
+      "totalViews": 29000,
+      "avgEngagementRate": 7
+    }
+  ],
+  "platforms": [
+    {
+      "id": "p1_1",
+      "workspaceId": "w1",
+      "name": "TikTok",
+      "color": "#636366",
+      "initialFollowers": 1500,
+      "followerTarget": 6000
+    },
+    {
+      "id": "p1_2",
+      "workspaceId": "w1",
+      "name": "Instagram",
+      "color": "#E1306C",
+      "initialFollowers": 800,
+      "followerTarget": 4000
+    },
+    {
+      "id": "p1_3",
+      "workspaceId": "w1",
+      "name": "YouTube",
+      "color": "#FF0000",
+      "initialFollowers": 100,
+      "followerTarget": 1000
+    },
+    {
+      "id": "p1_4",
+      "workspaceId": "w1",
+      "name": "Twitter/X",
+      "color": "#1DA1F2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_5",
+      "workspaceId": "w1",
+      "name": "LinkedIn",
+      "color": "#0A66C2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_6",
+      "workspaceId": "w1",
+      "name": "Facebook",
+      "color": "#1877F2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_7",
+      "workspaceId": "w1",
+      "name": "Threads",
+      "color": "#636366",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p2_1",
+      "workspaceId": "w2",
+      "name": "TikTok",
+      "color": "#636366",
+      "initialFollowers": 500,
+      "followerTarget": 2000
+    },
+    {
+      "id": "p2_2",
+      "workspaceId": "w2",
+      "name": "Instagram",
+      "color": "#E1306C",
+      "initialFollowers": 700,
+      "followerTarget": 3000
+    },
+    {
+      "id": "p2_3",
+      "workspaceId": "w2",
+      "name": "YouTube",
+      "color": "#FF0000",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    }
+  ],
+  "notes": [
+    {
+      "id": "changelog-w1",
+      "workspaceId": "w1",
+      "title": "⚙️ Riwayat Pembaruan & Fitur Baru (Changelog)",
+      "content": "Berikut adalah ringkasan pembaruan dan perbaikan sistem yang telah dilakukan sejauh ini:\n\n1. 🗂️ Kanban Board & Alur Kerja\n   - Memperbaiki bug seret & letak (drag-and-drop) ke kolom status yang kosong dengan algoritma deteksi kustom (pointerWithin).\n   - Menambahkan filter platform dan kategori konten di bagian atas Kanban.\n   - Proteksi rilis: Memblokir pemindahan status ke \"Published\" jika tanggal posting belum tiba (di masa mendatang) dan menampilkan peringatan.\n   - Menambahkan pop-up konfirmasi sebelum konten di-publish jika tanggalnya sudah tiba.\n\n2. 📈 Pelacakan Pengikut (Follower) per Platform\n   - Reorganisasi pengikut awal, target pengikut, dan riwayat pertumbuhan secara mandiri per platform sosial media (tidak lagi digabung per workspace).\n   - Menghitung pertumbuhan views dan follower harian secara real day-by-day dengan carry-over logic untuk mengantisipasi data kosong.\n\n3. 📅 Peningkatan Kalender Editorial\n   - Menampilkan label Pilar Konten (Kategori) dan Format Konten (Foto/Video) agar mudah dibaca di kalender.\n   - Menambahkan filter media sosial di halaman kalender.\n\n4. 💬 Antarmuka & Dialog Kustom\n   - Membuat ConfirmModal kustom bergaya iOS (tombol ganda/tunggal) untuk menggantikan konfirmasi bawaan browser.\n   - Memperbaiki bug input nama workspace yang kehilangan fokus saat mengetik di Pengaturan.\n   - Mengonversi tombol lonceng menjadi pusat \"Catatan & Panduan\" yang Anda buka saat ini.",
+      "createdAt": "2026-06-07T19:25:56.831Z",
+      "isRead": false
+    },
+    {
+      "id": "guide-w1",
+      "workspaceId": "w1",
+      "title": "📘 Panduan Fitur ContentOS",
+      "content": "Selamat datang di ContentOS! Berikut adalah panduan singkat fitur utama kami:\n\n1. 🚀 Manajemen Workspace\n   Kelola beberapa brand sekaligus! Switch workspace melalui pilihan di pojok kanan atas.\n\n2. 📊 Monitor Pertumbuhan\n   Dapatkan data pertumbuhan views dan follower harian secara real di Dashboard & Analytics. Update data Anda secara cepat di halaman Analytics.\n\n3. 🗂️ Kanban Pipeline\n   Kelola alur kerja konten dari Ide, Scripting, hingga Published secara visual dengan drag-and-drop.\n   * Catatan: Konten tidak dapat di-publish jika tanggal jadwal posting di masa mendatang.\n\n4. 📅 Kalender Editorial & Konten Bank\n   Atur jadwal posting bulanan Anda dengan mudah. Halaman Kalender mendukung filter per sosial media dan label format (Foto/Video) & pilar konten.",
+      "createdAt": "2026-06-07T19:25:56.831Z",
+      "isRead": false
+    },
+    {
+      "id": "changelog-w2",
+      "workspaceId": "w2",
+      "title": "⚙️ Riwayat Pembaruan & Fitur Baru (Changelog)",
+      "content": "Berikut adalah ringkasan pembaruan dan perbaikan sistem yang telah dilakukan sejauh ini:\n\n1. 🗂️ Kanban Board & Alur Kerja\n   - Memperbaiki bug seret & letak (drag-and-drop) ke kolom status yang kosong dengan algoritma deteksi kustom (pointerWithin).\n   - Menambahkan filter platform dan kategori konten di bagian atas Kanban.\n   - Proteksi rilis: Memblokir pemindahan status ke \"Published\" jika tanggal posting belum tiba (di masa mendatang) dan menampilkan peringatan.\n   - Menambahkan pop-up konfirmasi sebelum konten di-publish jika tanggalnya sudah tiba.\n\n2. 📈 Pelacakan Pengikut (Follower) per Platform\n   - Reorganisasi pengikut awal, target pengikut, dan riwayat pertumbuhan secara mandiri per platform sosial media (tidak lagi digabung per workspace).\n   - Menghitung pertumbuhan views dan follower harian secara real day-by-day dengan carry-over logic untuk mengantisipasi data kosong.\n\n3. 📅 Peningkatan Kalender Editorial\n   - Menampilkan label Pilar Konten (Kategori) dan Format Konten (Foto/Video) agar mudah dibaca di kalender.\n   - Menambahkan filter media sosial di halaman kalender.\n\n4. 💬 Antarmuka & Dialog Kustom\n   - Membuat ConfirmModal kustom bergaya iOS (tombol ganda/tunggal) untuk menggantikan konfirmasi bawaan browser.\n   - Memperbaiki bug input nama workspace yang kehilangan fokus saat mengetik di Pengaturan.\n   - Mengonversi tombol lonceng menjadi pusat \"Catatan & Panduan\" yang Anda buka saat ini.",
+      "createdAt": "2026-06-07T19:25:56.831Z",
+      "isRead": false
+    },
+    {
+      "id": "guide-w2",
+      "workspaceId": "w2",
+      "title": "📘 Panduan Fitur ContentOS",
+      "content": "Selamat datang di ContentOS! Berikut adalah panduan singkat fitur utama kami:\n\n1. 🚀 Manajemen Workspace\n   Kelola beberapa brand sekaligus! Switch workspace melalui pilihan di pojok kanan atas.\n\n2. 📊 Monitor Pertumbuhan\n   Dapatkan data pertumbuhan views dan follower harian secara real di Dashboard & Analytics. Update data Anda secara cepat di halaman Analytics.\n\n3. 🗂️ Kanban Pipeline\n   Kelola alur kerja konten dari Ide, Scripting, hingga Published secara visual dengan drag-and-drop.\n   * Catatan: Konten tidak dapat di-publish jika tanggal jadwal posting di masa mendatang.\n\n4. 📅 Kalender Editorial & Konten Bank\n   Atur jadwal posting bulanan Anda dengan mudah. Halaman Kalender mendukung filter per sosial media dan label format (Foto/Video) & pilar konten.",
+      "createdAt": "2026-06-07T19:25:56.831Z",
+      "isRead": false
+    }
+  ]
+}

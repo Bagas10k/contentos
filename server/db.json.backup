@@ -1,0 +1,385 @@
+{
+  "activeWorkspaceId": "1780859641652-u4ixq1r",
+  "workspaces": [
+    {
+      "id": "w1",
+      "name": "Bisnis Utama",
+      "color": "#007AFF",
+      "emoji": "🚀",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "name": "English corner",
+      "color": "#007AFF",
+      "emoji": "🚀",
+      "id": "1780859641652-u4ixq1r",
+      "createdAt": "2026-06-07T19:14:01.652Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat1",
+      "workspaceId": "w1",
+      "name": "Edukasi Tech",
+      "color": "#007AFF"
+    },
+    {
+      "id": "cat2",
+      "workspaceId": "w1",
+      "name": "Behind The Scene",
+      "color": "#FF9500"
+    },
+    {
+      "id": "cat3",
+      "workspaceId": "w1",
+      "name": "Tips & Tricks",
+      "color": "#34C759"
+    },
+    {
+      "id": "cat4",
+      "workspaceId": "w1",
+      "name": "Product Review",
+      "color": "#AF52DE"
+    },
+    {
+      "id": "cat5",
+      "workspaceId": "w1",
+      "name": "Story Time",
+      "color": "#FF2D55"
+    }
+  ],
+  "contentItems": [
+    {
+      "workspaceId": "1780859641652-u4ixq1r",
+      "title": "P balap",
+      "categoryId": "",
+      "status": "Idea",
+      "platform": "Instagram",
+      "id": "1780859801491-3uy3ji7",
+      "createdAt": "2026-06-07T19:16:41.491Z",
+      "updatedAt": "2026-06-07T19:16:41.491Z"
+    },
+    {
+      "workspaceId": "1780859641652-u4ixq1r",
+      "title": "P balap",
+      "categoryId": "",
+      "status": "Idea",
+      "platform": "TikTok",
+      "id": "1780859801489-wtt5uxg",
+      "createdAt": "2026-06-07T19:16:41.489Z",
+      "updatedAt": "2026-06-07T19:16:41.489Z"
+    },
+    {
+      "workspaceId": "1780859641652-u4ixq1r",
+      "title": "Bagas ganteng",
+      "categoryId": "",
+      "status": "Idea",
+      "platform": "TikTok",
+      "notes": "https://www.instagram.com/p/DZK_dbpieX6/?igsh=MXMybWFkdzYxYjc5MQ==",
+      "id": "1780859728244-ly7imsk",
+      "createdAt": "2026-06-07T19:15:28.244Z",
+      "updatedAt": "2026-06-07T19:15:28.244Z"
+    },
+    {
+      "id": "item1",
+      "workspaceId": "w1",
+      "title": "Cara Coding Pake AI untuk Pemula",
+      "categoryId": "cat1",
+      "status": "Published",
+      "scheduleDate": "2026-06-01",
+      "platform": "TikTok",
+      "notes": "Referensi audio tren TikTok",
+      "performance": {
+        "views": 45000,
+        "likes": 3200,
+        "comments": 185,
+        "shares": 420
+      },
+      "createdAt": "2026-05-25T10:00:00Z",
+      "updatedAt": "2026-06-01T00:00:00Z"
+    },
+    {
+      "id": "item2",
+      "workspaceId": "w1",
+      "title": "Review MacBook Pro M3 Pro Setelah 3 Bulan",
+      "categoryId": "cat4",
+      "status": "Ready to Post",
+      "scheduleDate": "2026-06-07",
+      "platform": "TikTok",
+      "notes": "Edit dulu intro-nya",
+      "createdAt": "2026-06-01T10:00:00Z",
+      "updatedAt": "2026-06-03T00:00:00Z"
+    },
+    {
+      "id": "item3",
+      "workspaceId": "w1",
+      "title": "Rutinitas Pagi Sebelum Kerja",
+      "categoryId": "cat2",
+      "status": "Editing",
+      "scheduleDate": "2026-06-10",
+      "platform": "TikTok",
+      "createdAt": "2026-06-02T10:00:00Z",
+      "updatedAt": "2026-06-04T00:00:00Z"
+    },
+    {
+      "id": "item4",
+      "workspaceId": "w1",
+      "title": "5 Tool AI yang Bikin Kerja 10x Lebih Cepat",
+      "categoryId": "cat3",
+      "status": "Scripting",
+      "scheduleDate": "2026-06-14",
+      "platform": "TikTok",
+      "notes": "Riset tools terbaru dulu",
+      "createdAt": "2026-06-03T10:00:00Z",
+      "updatedAt": "2026-06-05T00:00:00Z"
+    },
+    {
+      "id": "item5",
+      "workspaceId": "w1",
+      "title": "Cerita Gagal Startup Pertamaku",
+      "categoryId": "cat5",
+      "status": "Idea",
+      "platform": "TikTok",
+      "createdAt": "2026-06-04T10:00:00Z",
+      "updatedAt": "2026-06-04T00:00:00Z"
+    },
+    {
+      "id": "item6",
+      "workspaceId": "w1",
+      "title": "Behind The Scene Pembuatan Video Viral",
+      "categoryId": "cat2",
+      "status": "Production",
+      "scheduleDate": "2026-06-18",
+      "platform": "TikTok",
+      "createdAt": "2026-06-05T10:00:00Z",
+      "updatedAt": "2026-06-05T00:00:00Z"
+    },
+    {
+      "id": "item7",
+      "workspaceId": "w1",
+      "title": "Cara Dapet Client Pertama sebagai Freelancer",
+      "categoryId": "cat3",
+      "status": "Published",
+      "scheduleDate": "2026-05-20",
+      "platform": "TikTok",
+      "performance": {
+        "views": 28000,
+        "likes": 1900,
+        "comments": 97,
+        "shares": 210
+      },
+      "createdAt": "2026-05-15T10:00:00Z",
+      "updatedAt": "2026-05-20T00:00:00Z"
+    }
+  ],
+  "analyticsHistory": [
+    {
+      "id": "a1",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-01-01",
+      "followers": 1500,
+      "totalViews": 25000,
+      "avgEngagementRate": 4.2
+    },
+    {
+      "id": "a2",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-02-01",
+      "followers": 2000,
+      "totalViews": 37000,
+      "avgEngagementRate": 4.8
+    },
+    {
+      "id": "a3",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-03-01",
+      "followers": 2800,
+      "totalViews": 52000,
+      "avgEngagementRate": 5.1
+    },
+    {
+      "id": "a4",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-04-01",
+      "followers": 3900,
+      "totalViews": 78000,
+      "avgEngagementRate": 5.6
+    },
+    {
+      "id": "a5",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-05-01",
+      "followers": 4900,
+      "totalViews": 110000,
+      "avgEngagementRate": 6
+    },
+    {
+      "id": "a6",
+      "workspaceId": "w1",
+      "platform": "TikTok",
+      "date": "2026-06-01",
+      "followers": 5800,
+      "totalViews": 145000,
+      "avgEngagementRate": 6.4
+    },
+    {
+      "id": "ai1",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-01-01",
+      "followers": 800,
+      "totalViews": 20000,
+      "avgEngagementRate": 4
+    },
+    {
+      "id": "ai2",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-02-01",
+      "followers": 1100,
+      "totalViews": 30000,
+      "avgEngagementRate": 4.5
+    },
+    {
+      "id": "ai3",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-03-01",
+      "followers": 1400,
+      "totalViews": 46000,
+      "avgEngagementRate": 5
+    },
+    {
+      "id": "ai4",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-04-01",
+      "followers": 1900,
+      "totalViews": 64000,
+      "avgEngagementRate": 5.5
+    },
+    {
+      "id": "ai5",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-05-01",
+      "followers": 2300,
+      "totalViews": 79000,
+      "avgEngagementRate": 5.9
+    },
+    {
+      "id": "ai6",
+      "workspaceId": "w1",
+      "platform": "Instagram",
+      "date": "2026-06-01",
+      "followers": 3100,
+      "totalViews": 89000,
+      "avgEngagementRate": 6.2
+    }
+  ],
+  "platforms": [
+    {
+      "id": "p1_1",
+      "workspaceId": "w1",
+      "name": "TikTok",
+      "color": "#636366",
+      "initialFollowers": 1500,
+      "followerTarget": 6000
+    },
+    {
+      "id": "p1_2",
+      "workspaceId": "w1",
+      "name": "Instagram",
+      "color": "#E1306C",
+      "initialFollowers": 800,
+      "followerTarget": 4000
+    },
+    {
+      "id": "p1_3",
+      "workspaceId": "w1",
+      "name": "YouTube",
+      "color": "#FF0000",
+      "initialFollowers": 100,
+      "followerTarget": 1000
+    },
+    {
+      "id": "p1_4",
+      "workspaceId": "w1",
+      "name": "Twitter/X",
+      "color": "#1DA1F2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_5",
+      "workspaceId": "w1",
+      "name": "LinkedIn",
+      "color": "#0A66C2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_6",
+      "workspaceId": "w1",
+      "name": "Facebook",
+      "color": "#1877F2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "p1_7",
+      "workspaceId": "w1",
+      "name": "Threads",
+      "color": "#636366",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "1780859641652-g1m31gv",
+      "workspaceId": "1780859641652-u4ixq1r",
+      "name": "TikTok",
+      "color": "#636366",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "1780859641652-iw3exve",
+      "workspaceId": "1780859641652-u4ixq1r",
+      "name": "Instagram",
+      "color": "#E1306C",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "1780859641652-wbchidz",
+      "workspaceId": "1780859641652-u4ixq1r",
+      "name": "YouTube",
+      "color": "#FF0000",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "1780859641652-ubqydpq",
+      "workspaceId": "1780859641652-u4ixq1r",
+      "name": "Twitter/X",
+      "color": "#1DA1F2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    },
+    {
+      "id": "1780859641652-jf9jogy",
+      "workspaceId": "1780859641652-u4ixq1r",
+      "name": "LinkedIn",
+      "color": "#0A66C2",
+      "initialFollowers": 0,
+      "followerTarget": 0
+    }
+  ],
+  "notes": [],
+  "isLoading": false
+}
