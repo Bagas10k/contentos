@@ -1,4 +1,5 @@
 // src/components/ui/ConfirmModal.tsx
+import { createPortal } from 'react-dom';
 import { AlertTriangle, HelpCircle } from 'lucide-react';
 
 interface ConfirmModalProps {
@@ -41,7 +42,7 @@ export function ConfirmModal({
   const Icon = IconMap[type];
   const accentColor = colorMap[type];
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onCancel} style={{ zIndex: 9999 }}>
       <div 
         className="modal" 
@@ -88,6 +89,7 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

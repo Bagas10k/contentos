@@ -1,9 +1,10 @@
 // src/pages/Dashboard.tsx
 import { useMemo, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Eye, FileText,
-  ChevronRight, Layers, TrendingUp, Heart, Share2, Bookmark, X
+  ChevronRight, Layers, TrendingUp, Heart, Share2, Bookmark, X, RefreshCw
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
@@ -1582,7 +1583,7 @@ export default function Dashboard() {
       {/* ── MODALS ── */}
       
       {/* 1. Quick Update Followers Modal */}
-      {quickFollowerOpen && (
+      {quickFollowerOpen && createPortal(
         <div className="modal-overlay" onClick={() => setQuickFollowerOpen(false)} style={{ zIndex: 9999 }}>
           <div className="modal w-full max-w-[92vw] md:max-w-[400px]" style={{ borderRadius: 16 }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header p-4 pb-0 md:p-6 md:pb-0">
@@ -1613,27 +1614,37 @@ export default function Dashboard() {
                 </select>
               </div>
 
-              {quickPlat.toLowerCase() === 'instagram' && (
-                <div className="p-3 rounded-ios border" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
-                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Instagram Integration</label>
-                  <div className="flex flex-col md:flex-row gap-2">
-                    <input
-                      type="text"
-                      className="input text-sm py-1.5 w-full"
-                      placeholder="Username (e.g. bagas.spt)"
-                      value={igUsername}
-                      onChange={(e) => setIgUsername(e.target.value)}
-                    />
+              {quickPlat === 'Instagram' && (
+                <div className="form-group flex flex-col gap-1 rounded-[12px] p-3 border" style={{ borderColor: 'var(--border-color)', background: 'rgba(10, 132, 255, 0.04)' }}>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Sinkronisasi Instagram Otomatis</label>
                     <button 
-                      className="btn btn-secondary btn-sm w-full md:w-auto justify-center"
+                      className="btn btn-primary btn-sm flex items-center gap-1"
                       onClick={handleSyncInstagram}
                       disabled={isSyncingIg}
                     >
-                      {isSyncingIg ? 'Syncing...' : 'Tarik Data'}
+                      {isSyncingIg ? (
+                        <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                      ) : (
+                        <>
+                          <RefreshCw size={12} />
+                          Tarik Data
+                        </>
+                      )}
                     </button>
                   </div>
-                  <label className="flex items-center gap-2 mt-2 text-xs cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-                    <input
+                  <p className="text-[11px] leading-relaxed mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    Sistem akan otomatis mengambil data followers terbaru dari profil publik instagram:
+                  </p>
+                  <input
+                    type="text"
+                    className="input py-1 px-2.5 mt-1.5 text-xs font-medium"
+                    placeholder="Username Instagram (cth: @bagas)"
+                    value={igUsername}
+                    onChange={(e) => setIgUsername(e.target.value)}
+                  />
+                  <label className="flex items-center gap-2 text-[10px] mt-1.5 cursor-pointer" style={{ color: 'var(--text-quaternary)' }}>
+                    <input 
                       type="checkbox"
                       checked={saveIgUsername}
                       onChange={(e) => setSaveIgUsername(e.target.checked)}
@@ -1660,11 +1671,12 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 2. Full Performance Snapshot Modal */}
-      {addOpen && (
+      {addOpen && createPortal(
         <div className="modal-overlay" onClick={() => setAddOpen(false)} style={{ zIndex: 9999 }}>
           <div className="modal w-full max-w-[92vw] md:max-w-[400px]" style={{ borderRadius: 16 }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header p-4 pb-0 md:p-6 md:pb-0">
@@ -1739,7 +1751,8 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 3. Confirm Modal wrapper */}

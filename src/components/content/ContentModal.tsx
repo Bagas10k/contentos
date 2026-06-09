@@ -1,5 +1,6 @@
 // src/components/content/ContentModal.tsx
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/appStore';
@@ -180,7 +181,7 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
     if ((e.target as HTMLElement).classList.contains('modal-overlay')) onClose();
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={handleBackdrop}>
       <div className="modal" style={{ maxWidth: 560 }}>
         {/* Header */}
@@ -525,6 +526,7 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
         onConfirm={confirmState.onConfirm}
         onCancel={confirmState.onCancel}
       />
-    </div>
+    </div>,
+    document.body
   );
 }

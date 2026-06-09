@@ -1,5 +1,6 @@
 // src/components/layout/ShareModal.tsx
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Copy, Check, QrCode, Wifi } from 'lucide-react';
 import QRCode from 'qrcode';
 import { toast } from '../ui/Toast';
@@ -112,7 +113,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div 
         className="modal max-w-[420px] overflow-hidden" 
@@ -234,6 +235,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

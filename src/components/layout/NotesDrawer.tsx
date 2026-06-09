@@ -1,5 +1,6 @@
 // src/components/layout/NotesDrawer.tsx
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, StickyNote } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/appStore';
@@ -47,7 +48,7 @@ export function NotesDrawer({ isOpen, onClose }: NotesDrawerProps) {
     toast.success('Catatan berhasil disimpan');
   };
 
-  return (
+  return createPortal(
     <div 
       className="modal-overlay" 
       onClick={onClose} 
@@ -191,6 +192,7 @@ export function NotesDrawer({ isOpen, onClose }: NotesDrawerProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

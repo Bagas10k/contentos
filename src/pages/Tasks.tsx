@@ -1,5 +1,6 @@
 // src/pages/Tasks.tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CheckCircle2, Circle, Clock, Plus, Trash2,
   User, AlertCircle, RefreshCw, ClipboardList, Calendar,
@@ -112,7 +113,7 @@ function CompleteTaskModal({
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -225,7 +226,8 @@ function CompleteTaskModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -234,7 +236,7 @@ function ProofPhotoModal({ task, onClose }: { task: Task; onClose: () => void })
   const token = localStorage.getItem('token');
   const proofUrl = `/api/tasks/proof/${task.proofPhoto}?token=${token}`;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -264,7 +266,8 @@ function ProofPhotoModal({ task, onClose }: { task: Task; onClose: () => void })
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -311,7 +314,7 @@ function CreateTaskModal({
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -382,7 +385,8 @@ function CreateTaskModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
