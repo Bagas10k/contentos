@@ -45,6 +45,40 @@ const PERIOD_OPTIONS = [
   { label: 'Semua', days: 9999 },
 ];
 
+// Custom Glassmorphic Tooltip for Recharts
+function CustomChartTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    const data = payload[0].value;
+    let name = payload[0].name === 'followers' ? 'Followers' : 'Views';
+    if (payload[0].name === 'count') name = 'Konten';
+    const color = payload[0].stroke || payload[0].fill || '#007AFF';
+    
+    return (
+      <div 
+        className="p-3 rounded-ios border text-xs shadow-ios-md flex flex-col gap-1 text-left"
+        style={{ 
+          background: 'rgba(28, 28, 30, 0.75)', 
+          backdropFilter: 'blur(20px)', 
+          WebkitBackdropFilter: 'blur(20px)',
+          borderColor: 'rgba(255, 255, 255, 0.1)', 
+          color: '#fff',
+          minWidth: 120
+        }}
+      >
+        <p className="font-semibold text-[10px] uppercase tracking-wider opacity-60">{label}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+          <span className="font-bold text-sm text-white">
+            {typeof data === 'number' ? data.toLocaleString('id-ID') : data}
+          </span>
+        </div>
+        <p className="text-[9px] opacity-40 mt-0.5">{name}</p>
+      </div>
+    );
+  }
+  return null;
+}
+
 // ─── Sub-components ──────────────────────────────────────
 
 function StatCard({ icon: Icon, label, value, sub, color, gradient, onClick }: {
@@ -878,7 +912,7 @@ export default function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#F2F2F7" />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} tickFormatter={formatNumber} width={38} />
-                      <Tooltip cursor={false} contentStyle={{ background: '#1C1C1E', border: 'none', borderRadius: 10, color: '#fff', fontSize: 12 }} />
+                      <Tooltip content={<CustomChartTooltip />} />
                       <Area
                         type="monotone"
                         dataKey={chartMode === 'followers' || chartMode === 'views' ? chartMode : 'views'}
@@ -961,11 +995,7 @@ export default function Dashboard() {
                         <BarChart data={stats.platformDist} barSize={18}>
                           <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#8E8E93' }} axisLine={false} tickLine={false}
                             tickFormatter={(v) => v.length > 10 ? v.substring(0, 8) + '..' : v} />
-                          <Tooltip
-                            cursor={false}
-                            contentStyle={{ background: '#1C1C1E', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12 }}
-                            formatter={(v: any) => [v, 'Konten']}
-                          />
+                          <Tooltip content={<CustomChartTooltip />} />
                           <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                             {stats.platformDist.map((entry, i) => (
                               <Cell key={i} fill={entry.color} />
@@ -1255,7 +1285,7 @@ export default function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#F2F2F7" />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} tickFormatter={formatNumber} width={38} />
-                      <Tooltip cursor={false} contentStyle={{ background: '#1C1C1E', border: 'none', borderRadius: 10, color: '#fff', fontSize: 12 }} />
+                      <Tooltip content={<CustomChartTooltip />} />
                       <Area
                         type="monotone"
                         dataKey={chartMode === 'followers' ? 'followers' : 'views'}
@@ -1287,7 +1317,7 @@ export default function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#F2F2F7" />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: '#8E8E93' }} axisLine={false} tickLine={false} tickFormatter={formatNumber} width={38} />
-                      <Tooltip cursor={false} contentStyle={{ background: '#1C1C1E', border: 'none', borderRadius: 10, color: '#fff', fontSize: 12 }} />
+                      <Tooltip content={<CustomChartTooltip />} />
                       <Bar dataKey="views" fill="#5856D6" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1345,7 +1375,7 @@ export default function Dashboard() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#F2F2F7" />
                           <XAxis dataKey="dateFormatted" tick={{ fontSize: 10, fill: '#8E8E93' }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fontSize: 10, fill: '#8E8E93' }} axisLine={false} tickLine={false} tickFormatter={formatNumber} width={38} />
-                          <Tooltip cursor={false} contentStyle={{ background: '#1C1C1E', border: 'none', borderRadius: 10, color: '#fff', fontSize: 12 }} />
+                          <Tooltip content={<CustomChartTooltip />} />
                           <Area
                             type="monotone"
                             dataKey="views"

@@ -1,6 +1,6 @@
 // src/components/layout/TopBar.tsx
 import { Plus, Bell, Share2, Menu } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/appStore';
 import { ContentModal } from '../content/ContentModal';
@@ -18,6 +18,48 @@ export function TopBar({ title, subtitle }: { title: string; subtitle?: string }
   const [addOpen, setAddOpen]     = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+
+  // Connection Status polling
+  const [connStatus, setConnStatus] = useState<'online' | 'offline' | 'checking'>('online');
+
+  useEffect(() => {
+    let active = true;
+    const checkConnection = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/state', {
+          method: 'HEAD',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          }
+        });
+        if (active) {
+          if (res.ok || res.status === 401) {
+            setConnStatus('online');
+          } else {
+            setConnStatus('offline');
+          }
+        }
+      } catch (err) {
+        if (active) setConnStatus('offline');
+      }
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 10000);
+
+    const handleOnline = () => setConnStatus('online');
+    const handleOffline = () => setConnStatus('offline');
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleOpenNotes = () => {
     setNotesOpen(true);
@@ -64,6 +106,31 @@ export function TopBar({ title, subtitle }: { title: string; subtitle?: string }
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Connection Status Indicator */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all"
+            style={{
+              background: connStatus === 'online' 
+                ? 'rgba(48, 209, 88, 0.12)' 
+                : 'rgba(255, 69, 58, 0.12)',
+              color: connStatus === 'online' 
+                ? 'var(--color-green)' 
+                : 'var(--color-red)',
+              border: `1px solid ${connStatus === 'online' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}`,
+            }}
+            title={connStatus === 'online' ? 'Terkoneksi ke server lokal' : 'Koneksi ke server terputus'}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${connStatus === 'online' ? 'animate-pulse' : 'animate-ping'}`}
+              style={{ 
+                backgroundColor: connStatus === 'online' ? 'var(--color-green)' : 'var(--color-red)',
+              }}
+            />
+            <span className="hidden sm:inline">
+              {connStatus === 'online' ? 'LAN Online' : 'LAN Offline'}
+            </span>
+          </div>
+
           {/* Workspace pill */}
           {ws && (
             <div
