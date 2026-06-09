@@ -12,6 +12,7 @@ export const saveState = (state: AppState): void => {
     body: JSON.stringify(state),
   }).catch((e) => {
     console.error('Failed to save state to server:', e);
+    window.dispatchEvent(new CustomEvent('contentos-offline'));
   });
 };
 

@@ -577,6 +577,7 @@ export const useAppStore = create<AppStore>()(
         }
       } catch (e) {
         console.error('Gagal mengambil data dari server:', e);
+        window.dispatchEvent(new CustomEvent('contentos-offline'));
       }
       clearTimeout(loadingTimeout);
       set({ isLoading: false });

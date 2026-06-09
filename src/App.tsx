@@ -14,6 +14,7 @@ import LocalNetwork from './pages/LocalNetwork';
 import Tasks from './pages/Tasks';
 import { DynamicIsland } from './components/layout/DynamicIsland';
 import { AnnouncementModal } from './components/content/AnnouncementModal';
+import { WifiOff } from 'lucide-react';
 
 function TitleUpdater() {
   const location = useLocation();
@@ -44,6 +45,8 @@ export default function App() {
   const loadStateFromServer = useAppStore((state) => state.loadStateFromServer);
   const isLoading = useAppStore((state) => state.isLoading);
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [isServerOffline, setIsServerOffline] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
   // Capture PWA install prompt event
   useEffect(() => {
@@ -62,6 +65,44 @@ export default function App() {
       loadStateFromServer();
     }
   }, [loadStateFromServer, isAuthenticated]);
+
+  // Listen for offline status events
+  useEffect(() => {
+    const handleOffline = () => setIsServerOffline(true);
+    window.addEventListener('contentos-offline', handleOffline);
+    return () => window.removeEventListener('contentos-offline', handleOffline);
+  }, []);
+
+  const checkConnection = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/state', {
+        method: 'HEAD',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        }
+      });
+      if (res.ok || res.status === 401) {
+        setIsServerOffline(false);
+        return true;
+      }
+    } catch (err) {
+      // ignore
+    }
+    setIsServerOffline(true);
+    return false;
+  };
+
+  const handleCheckConnection = async () => {
+    setIsChecking(true);
+    const ok = await checkConnection();
+    setIsChecking(false);
+    if (ok) {
+      toast.success('Koneksi terhubung kembali!');
+    } else {
+      toast.error('Gagal menghubungkan. Pastikan server lokal aktif.');
+    }
+  };
 
   // Listen for logout event (token expired) — tampilkan login tanpa reload
   useEffect(() => {
@@ -153,7 +194,7 @@ export default function App() {
       if (!deviceId || !token) return;
       
       try {
-        await fetch('/api/network/heartbeat', {
+        const res = await fetch('/api/network/heartbeat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -165,8 +206,12 @@ export default function App() {
             userAgent: navigator.userAgent
           })
         });
+        if (res.ok) {
+          setIsServerOffline(false);
+        }
       } catch (error) {
         console.warn('[Heartbeat] Gagal mengirim detak jantung:', error);
+        setIsServerOffline(true);
       }
     };
     
@@ -282,6 +327,7 @@ export default function App() {
         });
 
         if (res.ok) {
+          setIsServerOffline(false);
           const loaded = await res.json();
           if (loaded && loaded.workspaces && loaded.workspaces.length > 0) {
             // Update the store state silently in the background
@@ -297,6 +343,7 @@ export default function App() {
         }
       } catch (e) {
         console.error('[Soft-Refetch] Failed to sync data in background:', e);
+        setIsServerOffline(true);
       }
     }, 15000); // 15 seconds
 
@@ -369,6 +416,35 @@ export default function App() {
 
       <AnnouncementModal />
       <ToastProvider />
+
+      {isServerOffline && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in" style={{ zIndex: 100000 }}>
+          <div className="bg-[var(--bg-surface-elevated)] p-6 rounded-[20px] max-w-[90vw] w-[360px] text-center shadow-ios-lg border border-[var(--border-color)]">
+            <div className="w-12 h-12 rounded-full bg-[rgba(255,69,58,0.12)] flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <WifiOff className="text-[var(--color-red)]" size={24} />
+            </div>
+            <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">Koneksi Server Terputus</h3>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5">
+              Sistem tidak dapat menjangkau server lokal (LAN). Silakan periksa koneksi Wi-Fi/LAN Anda, pastikan server aktif, lalu segarkan halaman.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button 
+                className="btn btn-primary w-full justify-center py-2 text-xs" 
+                onClick={handleCheckConnection}
+                disabled={isChecking}
+              >
+                {isChecking ? 'Menghubungkan...' : 'Hubungkan Kembali'}
+              </button>
+              <button 
+                className="btn btn-secondary w-full justify-center py-2 text-xs" 
+                onClick={() => window.location.reload()}
+              >
+                Refresh Halaman
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </BrowserRouter>
   );
 }
