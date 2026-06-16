@@ -9,8 +9,6 @@ import { useAppStore } from '../store/appStore';
 import { TopBar } from '../components/layout/TopBar';
 import { ContentModal } from '../components/content/ContentModal';
 import type { ContentItem, ContentStatus } from '../types';
-import { getPlatformColor } from '../lib/utils';
-import { Eye } from 'lucide-react';
 
 const STATUS_COLORS: Record<ContentStatus, string> = {
   'Idea':          '#8E8E93',
@@ -24,15 +22,14 @@ const STATUS_COLORS: Record<ContentStatus, string> = {
 function renderEventContent(eventInfo: any) {
   const c = eventInfo.event.extendedProps.content as ContentItem | undefined;
   if (!c) return <span className="truncate">{eventInfo.event.title}</span>;
-  const platformColor = getPlatformColor(c?.platform ?? '');
   const categoryName = eventInfo.event.extendedProps.categoryName;
   const categoryColor = eventInfo.event.extendedProps.categoryColor;
 
   return (
-    <div className="flex flex-col p-1 w-full overflow-hidden text-[10px] leading-tight text-white gap-1">
+    <div className="flex flex-col p-1 w-full overflow-hidden text-[10px] leading-tight text-white gap-1 mobile-compact-event">
       {/* Category Tag/Badge at the very top */}
       {categoryName && (
-        <div className="flex">
+        <div className="flex category-badge">
           <span 
             className="px-1.5 py-0.5 rounded-sm text-[7.5px] font-bold uppercase tracking-wide truncate max-w-full" 
             style={{ 
@@ -46,35 +43,28 @@ function renderEventContent(eventInfo: any) {
         </div>
       )}
       
-      {/* Title with platform color dot */}
-      <div className="flex items-center gap-1 font-semibold truncate">
-        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: platformColor, opacity: 0.9 }} />
+      {/* Title */}
+      <div className="font-semibold truncate event-title">
         <span className="truncate" title={c.title}>{c.title}</span>
       </div>
       
-      {/* Bottom row: status + format/performance */}
-      <div className="flex items-center justify-between gap-1 mt-0.5 flex-wrap">
-        <div className="flex items-center gap-1 flex-wrap">
-          <span 
-            className="px-1 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider" 
-            style={{ background: 'rgba(255,255,255,0.25)' }}
-          >
-            {c.status}
-          </span>
-          {/* Format badge: Foto / Video */}
-          <span 
-            className="px-1 py-0.5 rounded text-[8px] font-bold"
-            style={{ background: 'rgba(0,0,0,0.20)', color: '#fff' }}
-          >
-            {c.format === 'Foto' ? 'Foto' : 'Video'}
-          </span>
-        </div>
-        
-        {c.performance && c.performance.views > 0 && (
-          <span className="text-[8px] opacity-95 flex-shrink-0 flex items-center gap-0.5">
-            <Eye size={7} /> {c.performance.views.toLocaleString()}
-          </span>
-        )}
+      {/* Bottom row: format & status dot */}
+      <div className="flex items-center justify-between gap-1 mt-0.5 w-full event-meta">
+        <span 
+          className="px-1 py-0.5 rounded text-[8px] font-bold format-badge"
+          style={{ background: 'rgba(0,0,0,0.20)', color: '#fff' }}
+        >
+          {c.format === 'Foto' ? 'Foto' : 'Video'}
+        </span>
+        <span 
+          className="w-2 h-2 rounded-full flex-shrink-0 status-dot"
+          style={{ 
+            background: STATUS_COLORS[c.status] ?? '#C7C7CC',
+            border: '1px solid rgba(255,255,255,0.4)',
+            boxShadow: '0 0.5px 1px rgba(0,0,0,0.15)'
+          }}
+          title={`Status: ${c.status}`}
+        />
       </div>
     </div>
   );
@@ -95,28 +85,43 @@ export default function EditorialCalendar() {
     return platform === 'all' ? content : content.filter((c) => c.platform === platform);
   }, [content, platform]);
 
-  // Map content to FullCalendar events color-coded by Status
+  // Map content to FullCalendar events color-coded by Status, grouping duplicates on the same date
   const events = useMemo(() => {
-    return filteredContent
+    const grouped: Record<string, ContentItem[]> = {};
+    
+    filteredContent
       .filter((c) => c.scheduleDate)
-      .map((c) => {
-        const color = STATUS_COLORS[c.status] ?? '#8E8E93';
-        const cat = cats.find((ct) => ct.id === c.categoryId);
-        return {
-          id:    c.id,
-          title: c.title,
-          date:  c.scheduleDate!,
-          backgroundColor: color,
-          borderColor:     color,
-          textColor:       '#fff',
-          extendedProps: { 
-            contentId: c.id, 
-            content: c,
-            categoryName: cat?.name,
-            categoryColor: cat?.color
-          },
-        };
+      .forEach((c) => {
+        // Group by title and date (same title, category, format, date, and status)
+        const key = `${c.title.trim().toLowerCase()}_${c.scheduleDate}`;
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+        grouped[key].push(c);
       });
+
+    return Object.values(grouped).map((items) => {
+      const primaryItem = items[0];
+      const cat = cats.find((ct) => ct.id === primaryItem.categoryId);
+      const color = cat?.color ?? '#8E8E93';
+      const allPlatforms = items.map(it => it.platform);
+
+      return {
+        id:    primaryItem.id,
+        title: primaryItem.title,
+        date:  primaryItem.scheduleDate!,
+        backgroundColor: color,
+        borderColor:     color,
+        textColor:       '#fff',
+        extendedProps: { 
+          contentId: primaryItem.id, 
+          content: primaryItem,
+          categoryName: cat?.name,
+          categoryColor: cat?.color,
+          platforms: allPlatforms,
+        },
+      };
+    });
   }, [filteredContent, cats]);
 
   const handleEventClick = (info: any) => {
@@ -158,6 +163,70 @@ export default function EditorialCalendar() {
         .fc-daygrid-event-harness {
           margin-top: 2px !important;
         }
+
+        @media (max-width: 768px) {
+          .fc-header-toolbar {
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 8px !important;
+          }
+          .fc-toolbar-title {
+            font-size: 13px !important;
+          }
+          .fc-button {
+            padding: 3px 6px !important;
+            font-size: 10px !important;
+          }
+          .fc-daygrid-day-top {
+            padding: 1px !important;
+          }
+          .fc-daygrid-day-number {
+            font-size: 9px !important;
+            padding: 1px 4px !important;
+          }
+          .fc-day-today .fc-daygrid-day-number {
+            padding: 1px 4px !important;
+          }
+          .fc-event {
+            border-radius: 3px !important;
+          }
+          .fc-daygrid-event-harness {
+            margin-top: 1px !important;
+          }
+          .fc-daygrid-more-link {
+            font-size: 8px !important;
+            padding: 0 1.5px !important;
+            margin-top: 0.5px !important;
+            display: block !important;
+            text-align: center;
+          }
+
+          /* Compact mobile layout for events */
+          .mobile-compact-event {
+            padding: 1px !important;
+            gap: 0px !important;
+          }
+          .mobile-compact-event .category-badge {
+            display: none !important;
+          }
+          .mobile-compact-event .format-badge {
+            display: none !important;
+          }
+          .mobile-compact-event .event-title {
+            font-size: 8px !important;
+            font-weight: 500 !important;
+            line-height: 1.1 !important;
+          }
+          .mobile-compact-event .event-meta {
+            justify-content: flex-end !important;
+            margin-top: 0px !important;
+            padding-right: 1px;
+          }
+          .mobile-compact-event .status-dot {
+            width: 4px !important;
+            height: 4px !important;
+          }
+        }
       `}</style>
 
       <TopBar title="Editorial Calendar" subtitle={`${events.length} konten terjadwal`} />
@@ -195,30 +264,12 @@ export default function EditorialCalendar() {
               );
             })}
           </div>
-
-          {/* Status Legend (Compact) */}
-          <div className="flex flex-wrap gap-1.5 p-2 rounded-ios border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
-            {(Object.keys(STATUS_COLORS) as ContentStatus[]).map((status) => {
-              const color = STATUS_COLORS[status];
-              const count = content.filter((c) => c.status === status).length;
-              return (
-                <span
-                  key={status}
-                  className="badge text-[10px] py-0.5 px-2"
-                  style={{ background: `${color}14`, color: color }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full inline-block mr-1" style={{ background: color }} />
-                  {status} <span className="opacity-70 ml-0.5">({count})</span>
-                </span>
-              );
-            })}
-          </div>
         </div>
 
         {/* Desktop Split Layout */}
         <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-4">
           {/* Left panel: Calendar (primary) */}
-          <div className="flex-1 min-h-[480px] md:min-h-0 card p-4 flex flex-col">
+          <div className="flex-1 min-h-[520px] md:min-h-0 card p-2 md:p-4 flex flex-col">
             <div className="flex-1 min-h-0">
               <FullCalendar
                 ref={calRef}
@@ -275,9 +326,16 @@ export default function EditorialCalendar() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{c.title}</p>
-                        <p className="text-[10px] truncate" style={{ color: 'var(--text-quaternary)' }}>
-                          {c.platform} · {cat?.name ?? '-'}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {cat && (
+                            <span className="px-1.5 py-0.5 rounded text-[8px] font-semibold text-white" style={{ background: cat.color }}>
+                              {cat.name}
+                            </span>
+                          )}
+                          <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                            {c.format === 'Foto' ? 'Foto' : 'Video'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );

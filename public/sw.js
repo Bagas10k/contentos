@@ -1,4 +1,4 @@
-const CACHE_NAME = 'contentos-pwa-v1';
+const CACHE_NAME = 'contentos-pwa-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: Cache-first fallback to network, or network-first for API
+// Fetch Event: Network-First falling back to Cache
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
@@ -41,11 +41,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         // Cache new static assets dynamically
         if (event.request.method === 'GET' && response.status === 200) {
           const responseToCache = response.clone();
@@ -54,10 +51,15 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return response;
-      });
-    }).catch(() => {
-      // Offline fallback
-      return caches.match('/index.html');
-    })
+      })
+      .catch(() => {
+        // Offline fallback
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return caches.match('/index.html');
+        });
+      })
   );
 });

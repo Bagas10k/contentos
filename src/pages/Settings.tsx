@@ -291,6 +291,66 @@ export default function Settings() {
     }
   };
 
+  const handleClearActivityLogs = () => {
+    triggerConfirm({
+      title: 'Hapus Semua Log Aktivitas?',
+      message: 'Tindakan ini akan menghapus seluruh catatan audit histori aktivitas dari database secara permanen. Pengguna tidak akan bisa memulihkan data log yang terhapus.',
+      confirmText: 'Hapus Semua',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch('/api/admin/activity-logs/clear', {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast.success('Log aktivitas berhasil dibersihkan.');
+            fetchActivityLogs();
+          } else {
+            toast.error(data.message || 'Gagal membersihkan log.');
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Gagal menghubungi server');
+        }
+      }
+    });
+  };
+
+  const handlePruneActivityLogs = () => {
+    triggerConfirm({
+      title: 'Pangkas Log Lama?',
+      message: 'Apakah Anda yakin ingin memangkas log aktivitas lama dan hanya menyisakan 100 catatan log aktivitas terbaru?',
+      confirmText: 'Pangkas Log',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch('/api/admin/activity-logs/prune', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ keepCount: 100 })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast.success('Log aktivitas berhasil dipangkas.');
+            fetchActivityLogs();
+          } else {
+            toast.error(data.message || 'Gagal memangkas log.');
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Gagal menghubungi server');
+        }
+      }
+    });
+  };
+
   // PWA Install Prompt State
   const [installPrompt, setInstallPrompt] = useState<any>((window as any).deferredInstallPrompt);
 
@@ -1765,7 +1825,7 @@ export default function Settings() {
                     Histori lengkap aktivitas klerikal pengguna di workspace, terurut dari yang terbaru.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="text"
                     className="input text-xs w-48 py-1.5 px-3"
@@ -1781,6 +1841,22 @@ export default function Settings() {
                     title="Segarkan Log"
                   >
                     <RefreshCw size={13} className={activityLoading ? 'animate-spin' : ''} />
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{ color: 'var(--color-orange)', borderColor: 'rgba(255, 149, 0, 0.25)' }}
+                    onClick={handlePruneActivityLogs}
+                    title="Pangkas log lama dan sisakan 100 terbaru"
+                  >
+                    Pangkas Log
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{ color: 'var(--color-red)', borderColor: 'rgba(255, 69, 58, 0.25)' }}
+                    onClick={handleClearActivityLogs}
+                    title="Hapus seluruh log aktivitas"
+                  >
+                    Hapus Semua
                   </button>
                 </div>
               </div>

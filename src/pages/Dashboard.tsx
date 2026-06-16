@@ -2,9 +2,11 @@
 import { useMemo, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import {
   Users, Eye, FileText,
-  ChevronRight, Layers, TrendingUp, Heart, Share2, Bookmark, X, RefreshCw
+  ChevronRight, Layers, TrendingUp, Heart, Share2, Bookmark, X, RefreshCw, Download
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
@@ -56,15 +58,8 @@ function CustomChartTooltip({ active, payload, label }: any) {
     
     return (
       <div 
-        className="p-3 rounded-ios border text-xs shadow-ios-md flex flex-col gap-1 text-left"
-        style={{ 
-          background: 'rgba(28, 28, 30, 0.75)', 
-          backdropFilter: 'blur(20px)', 
-          WebkitBackdropFilter: 'blur(20px)',
-          borderColor: 'rgba(255, 255, 255, 0.1)', 
-          color: '#fff',
-          minWidth: 120
-        }}
+        className="chart-tooltip"
+        style={{ color: '#fff', minWidth: 120 }}
       >
         <p className="font-semibold text-[10px] uppercase tracking-wider opacity-60">{label}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
@@ -438,6 +433,58 @@ export default function Dashboard() {
     toast.success('Data analytics ditambahkan');
     setNewSnap({ platform: '', date: '', followers: '', totalViews: '', avgEngagementRate: '' });
     setAddOpen(false);
+  };
+
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    toast.info('Menyiapkan dokumen PDF...');
+    try {
+      const element = document.querySelector('.page-content') as HTMLElement;
+      if (!element) throw new Error('Elemen laporan tidak ditemukan.');
+
+      // Wait a tiny moment to ensure layout is settled
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+
+      // Temporarily force desktop width for consistent snapshot layout
+      const originalStyle = element.getAttribute('style') || '';
+      element.style.width = '1280px';
+      element.style.minWidth = '1280px';
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: theme === 'dark' ? '#1c1c1e' : '#f2f2f7',
+        logging: false,
+        windowWidth: 1280,
+      });
+
+      // Restore original style
+      element.setAttribute('style', originalStyle);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+      
+      const dateStr = new Date().toISOString().slice(0, 10);
+      pdf.save(`Laporan_Dasbor_ContentOS_${dateStr}.pdf`);
+      
+      toast.success('Laporan PDF berhasil diunduh!');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Gagal mengekspor laporan ke PDF.');
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   // ── Filters & Analytics Computations ──
@@ -817,6 +864,14 @@ export default function Dashboard() {
               </button>
               <button className="btn btn-secondary btn-sm text-xs py-1.5" onClick={() => setAddOpen(true)}>
                 Input Performa Lengkap
+              </button>
+              <button 
+                className="btn btn-primary btn-sm text-xs py-1.5 flex items-center gap-1.5" 
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+              >
+                <Download size={13} />
+                {isExportingPdf ? 'Ekspor...' : 'Export PDF'}
               </button>
             </div>
           </div>

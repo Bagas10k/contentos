@@ -30,6 +30,15 @@ interface UserAccount {
   role: string;
 }
 
+const COMPLETION_MESSAGES = [
+  'Gokil! Satu tugas beres lagi. Rehat sejenak yuk, seduh kopi atau teh dulu! ☕',
+  'Mantap! Kerja bagus. Kerja kerasmu hari ini keren banget! 🙌',
+  'Alhamdulillah, selesai juga! Satu langkah lebih dekat ke santai-santai. 🥳',
+  'Keren banget! Tugas selesai dengan mulus. Bangga deh sama kamu! ✨',
+  'Boom! Selesai! Kamu luar biasa, yuk tarik napas dalam-dalam dulu. 🍃',
+  'Akhirnya kelar juga! Kamu emang bisa diandalkan. Selamat istirahat sejenak! 🌟'
+];
+
 // ─── Modal: Konfirmasi Selesai + Upload Bukti ─────────────────
 function CompleteTaskModal({
   task,
@@ -100,7 +109,8 @@ function CompleteTaskModal({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success('✅ Tugas berhasil diselesaikan!');
+        const randomMsg = COMPLETION_MESSAGES[Math.floor(Math.random() * COMPLETION_MESSAGES.length)];
+        toast.success(randomMsg);
         onCompleted();
         onClose();
       } else {
@@ -131,12 +141,25 @@ function CompleteTaskModal({
         </div>
 
         <div className="modal-body flex flex-col gap-4">
-          {/* Confirmation text */}
-          <div
-            className="rounded-[12px] p-3 text-sm"
-            style={{ background: 'rgba(48,209,88,0.08)', border: '1px solid rgba(48,209,88,0.20)', color: 'var(--text-secondary)' }}
+          {/* Detail Tugas Utama */}
+          <div 
+            className="rounded-[14px] p-4 flex flex-col gap-1.5"
+            style={{ 
+              background: 'var(--bg-tertiary)', 
+              border: '1px solid var(--border-color)',
+            }}
           >
-            Apakah Anda yakin tugas ini sudah selesai? Setelah dikonfirmasi, status akan berubah dan tidak bisa dikembalikan kecuali oleh Admin.
+            <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--color-blue)' }}>
+              Tugas Yang Diselesaikan
+            </span>
+            <h3 className="font-bold text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+              {task.title}
+            </h3>
+            {task.description && (
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-tertiary)', whiteSpace: 'pre-line' }}>
+                {task.description}
+              </p>
+            )}
           </div>
 
           {/* Photo upload */}

@@ -10,6 +10,7 @@ import {
   useSensors,
   DragOverlay,
   useDroppable,
+  type Modifier,
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import {
@@ -24,7 +25,7 @@ import { useAppStore } from '../store/appStore';
 import { TopBar } from '../components/layout/TopBar';
 import { ContentModal } from '../components/content/ContentModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import type { ContentItem, ContentStatus } from '../types';
+import type { ContentItem, ContentStatus, GroupedContentItem } from '../types';
 import { CONTENT_STATUSES } from '../types';
 import { formatDate } from '../lib/utils';
 import { logActivity } from '../lib/auditLogger';
@@ -39,15 +40,13 @@ const COLUMN_COLORS: Record<ContentStatus, string> = {
 };
 
 function KanbanCard({ item, cats, plats, isDragging, onClick }: {
-  item: ContentItem;
+  item: GroupedContentItem;
   cats: { id: string; name: string; color: string }[];
   plats: { id: string; name: string; color: string }[];
   isDragging?: boolean;
   onClick: () => void;
 }) {
   const cat = cats.find((c) => c.id === item.categoryId);
-  const plat = plats.find((p) => p.name.toLowerCase() === item.platform.toLowerCase());
-  const platColor = plat?.color ?? '#8E8E93';
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
 
   const style = {
@@ -76,10 +75,16 @@ function KanbanCard({ item, cats, plats, isDragging, onClick }: {
         {item.title}
       </p>
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="badge text-xs" style={{ background: `${platColor}14`, color: platColor }}>
-            {item.platform}
-          </span>
+        <div className="flex items-center gap-1 flex-wrap">
+          {item.platforms && item.platforms.map((platName) => {
+            const p = plats.find((plat) => plat.name.toLowerCase() === platName.toLowerCase());
+            const pColor = p?.color ?? '#8E8E93';
+            return (
+              <span key={platName} className="badge text-[10px]" style={{ background: `${pColor}14`, color: pColor }}>
+                {platName}
+              </span>
+            );
+          })}
           {item.referenceUrl && (
             <a
               href={item.referenceUrl}
@@ -106,10 +111,10 @@ function KanbanCard({ item, cats, plats, isDragging, onClick }: {
 
 function KanbanColumn({ status, items, cats, plats, onCardClick, onAddClick }: {
   status: ContentStatus;
-  items: ContentItem[];
+  items: GroupedContentItem[];
   cats: { id: string; name: string; color: string }[];
   plats: { id: string; name: string; color: string }[];
-  onCardClick: (item: ContentItem) => void;
+  onCardClick: (item: GroupedContentItem) => void;
   onAddClick: (status: ContentStatus) => void;
 }) {
   const color = COLUMN_COLORS[status];
@@ -172,7 +177,7 @@ export default function KanbanBoard() {
   const plats = useAppStore(useShallow((state) => (state.platforms ?? []).filter((p) => p.workspaceId === state.activeWorkspaceId)));
   const moveContentStatus = useAppStore((state) => state.moveContentStatus);
 
-  const [selected, setSelected]   = useState<ContentItem | null>(null);
+  const [selected, setSelected]   = useState<GroupedContentItem | null>(null);
   const [addStatus, setAddStatus] = useState<ContentStatus | null>(null);
   const [activeId, setActiveId]   = useState<string | null>(null);
 
@@ -205,13 +210,66 @@ export default function KanbanBoard() {
     if (filterCat !== 'all') {
       list = list.filter((c) => c.categoryId === filterCat);
     }
-    return list;
+
+    // Group identical items (workspace, category, scheduleDate, title)
+    const groupedMap: Record<string, ContentItem[]> = {};
+    list.forEach((c) => {
+      const key = `${c.workspaceId}_${c.categoryId}_${c.scheduleDate || 'unscheduled'}_${c.title.toLowerCase().trim()}`;
+      if (!groupedMap[key]) groupedMap[key] = [];
+      groupedMap[key].push(c);
+    });
+
+    return Object.values(groupedMap).map((items) => {
+      const primary = items[0];
+      const platforms = Array.from(new Set(items.map(it => it.platform)));
+      const allIds = items.map(it => it.id);
+
+      const hasPerf = items.some(it => it.performance);
+      const aggregatedPerformance = hasPerf ? {
+        views: items.reduce((sum, it) => sum + (it.performance?.views ?? 0), 0),
+        likes: items.reduce((sum, it) => sum + (it.performance?.likes ?? 0), 0),
+        comments: items.reduce((sum, it) => sum + (it.performance?.comments ?? 0), 0),
+        shares: items.reduce((sum, it) => sum + (it.performance?.shares ?? 0), 0),
+        saves: items.reduce((sum, it) => sum + (it.performance?.saves ?? 0), 0),
+      } : undefined;
+
+      return {
+        ...primary,
+        platforms,
+        allIds,
+        performance: aggregatedPerformance,
+      } as GroupedContentItem;
+    });
   }, [content, filterPlat, filterCat]);
 
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   );
+
+  // Modifier: overlay mengikuti kursor tepat di titik tempat pengguna mengklik kartu.
+  // DragOverlay default sudah menghitung delta gerakan cursor dengan benar.
+  // Yang kita perlu koreksi: jika ada scrollable ancestor, tambahkan kompensasi scroll-nya.
+  const grabPointModifier: Modifier = ({ transform, activatorEvent, draggingNodeRect, scrollableAncestors }) => {
+    if (!draggingNodeRect || !activatorEvent || !('clientX' in activatorEvent)) {
+      return transform;
+    }
+
+    // Hitung total scroll offset dari semua ancestor yang scrollable
+    let scrollOffsetX = 0;
+    let scrollOffsetY = 0;
+    for (const el of scrollableAncestors) {
+      scrollOffsetX += el.scrollLeft;
+      scrollOffsetY += el.scrollTop;
+    }
+
+    // Tambahkan kompensasi scroll agar overlay tidak bergeser saat container discroll
+    return {
+      ...transform,
+      x: transform.x - scrollOffsetX,
+      y: transform.y - scrollOffsetY,
+    };
+  };
 
   // Custom collision detection to handle empty columns gracefully
   const collisionDetectionStrategy = (args: any) => {
@@ -246,24 +304,24 @@ export default function KanbanBoard() {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
 
-    const activeItem = content.find((c) => c.id === active.id);
-    if (!activeItem) return;
+    const activeGroupItem = filteredContent.find((c) => c.id === active.id);
+    if (!activeGroupItem) return;
 
     const isStatus = CONTENT_STATUSES.includes(over.id as ContentStatus);
     const targetStatus = isStatus ? (over.id as ContentStatus) : (content.find((c) => c.id === over.id)?.status);
 
     if (!targetStatus) return;
 
-    if (activeItem.status !== targetStatus) {
+    if (activeGroupItem.status !== targetStatus) {
       if (targetStatus === 'Published') {
         const todayStr = new Date().toLocaleDateString('en-CA');
-        const isFuture = activeItem.scheduleDate && activeItem.scheduleDate > todayStr;
+        const isFuture = activeGroupItem.scheduleDate && activeGroupItem.scheduleDate > todayStr;
         
         if (isFuture) {
           setConfirmState({
             isOpen: true,
             title: 'Belum Waktunya Publish',
-            message: `Konten ini dijadwalkan untuk diposting pada tanggal ${formatDate(activeItem.scheduleDate!)}. Anda tidak dapat mempublikasikannya sebelum tanggal tersebut.`,
+            message: `Konten ini dijadwalkan untuk diposting pada tanggal ${formatDate(activeGroupItem.scheduleDate!)}. Anda tidak dapat mempublikasikannya sebelum tanggal tersebut.`,
             confirmText: 'Mengerti',
             cancelText: '',
             type: 'warning',
@@ -285,8 +343,20 @@ export default function KanbanBoard() {
             type: 'info',
             singleButton: false,
             onConfirm: () => {
-              moveContentStatus(active.id as string, 'Published');
-              logActivity('Mengubah Status Konten', activeItem.title, `Kanban: ${activeItem.status} -> Published`);
+              for (const itemId of activeGroupItem.allIds) {
+                moveContentStatus(itemId, 'Published');
+              }
+              const restorePayload = {
+                type: 'status_content',
+                ids: activeGroupItem.allIds,
+                oldStatus: activeGroupItem.status
+              };
+              logActivity(
+                'Mengubah Status Konten', 
+                activeGroupItem.title, 
+                `Kanban: ${activeGroupItem.status} -> Published`,
+                restorePayload
+              );
               setConfirmState((prev) => ({ ...prev, isOpen: false }));
             },
             onCancel: () => {
@@ -295,13 +365,25 @@ export default function KanbanBoard() {
           });
         }
       } else {
-        moveContentStatus(active.id as string, targetStatus);
-        logActivity('Mengubah Status Konten', activeItem.title, `Kanban: ${activeItem.status} -> ${targetStatus}`);
+        for (const itemId of activeGroupItem.allIds) {
+          moveContentStatus(itemId, targetStatus);
+        }
+        const restorePayload = {
+          type: 'status_content',
+          ids: activeGroupItem.allIds,
+          oldStatus: activeGroupItem.status
+        };
+        logActivity(
+          'Mengubah Status Konten', 
+          activeGroupItem.title, 
+          `Kanban: ${activeGroupItem.status} -> ${targetStatus}`,
+          restorePayload
+        );
       }
     }
   };
 
-  const dragItem = activeId ? content.find((c) => c.id === activeId) : null;
+  const dragItem = activeId ? filteredContent.find((c) => c.id === activeId) : null;
 
   return (
     <div className="page-enter flex flex-col h-full overflow-hidden">
@@ -355,12 +437,47 @@ export default function KanbanBoard() {
             ))}
           </div>
 
-          <DragOverlay>
-            {dragItem && (
-              <div className="kanban-card rotate-2 scale-105" style={{ opacity: 0.95, touchAction: 'none' }}>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{dragItem.title}</p>
-              </div>
-            )}
+          <DragOverlay modifiers={[grabPointModifier]} dropAnimation={{ duration: 200, easing: 'ease' }}>
+            {dragItem && (() => {
+              const cat = cats.find((c) => c.id === dragItem.categoryId);
+              return (
+                <div
+                  className="kanban-card"
+                  style={{
+                    opacity: 0.93,
+                    rotate: '2deg',
+                    scale: '1.04',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)',
+                    cursor: 'grabbing',
+                    pointerEvents: 'none',
+                    width: 216,
+                  }}
+                >
+                  {cat && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+                      <span className="text-xs font-medium" style={{ color: cat.color }}>{cat.name}</span>
+                    </div>
+                  )}
+                  <p className="text-sm font-medium leading-snug" style={{ color: 'var(--text-primary)' }}>
+                    {dragItem.title}
+                  </p>
+                  {dragItem.platforms && dragItem.platforms.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap mt-2">
+                      {dragItem.platforms.slice(0, 2).map((platName) => {
+                        const p = plats.find((plat) => plat.name.toLowerCase() === platName.toLowerCase());
+                        const pColor = p?.color ?? '#8E8E93';
+                        return (
+                          <span key={platName} className="badge text-[10px]" style={{ background: `${pColor}14`, color: pColor }}>
+                            {platName}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </DragOverlay>
         </DndContext>
       </div>

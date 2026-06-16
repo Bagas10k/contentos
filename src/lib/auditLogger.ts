@@ -8,7 +8,7 @@
  * @param targetName Nama objek yang terpengaruh (misal: Judul konten, nama workspace, username)
  * @param details Keterangan opsional tambahan (misal: status awal -> status akhir)
  */
-export async function logActivity(action: string, targetName: string, details?: string): Promise<void> {
+export async function logActivity(action: string, targetName: string, details?: string, restoreData?: any): Promise<void> {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -23,7 +23,8 @@ export async function logActivity(action: string, targetName: string, details?: 
       body: JSON.stringify({
         action,
         targetName,
-        details: details || ''
+        details: details || '',
+        restoreData: restoreData ? JSON.stringify(restoreData) : null
       })
     }).catch(err => {
       console.warn('[Audit Log] Gagal mengirim log aktivitas ke server:', err);

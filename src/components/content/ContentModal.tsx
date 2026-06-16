@@ -7,7 +7,7 @@ import { useAppStore } from '../../store/appStore';
 import type { ContentItem, ContentStatus, ContentFormat } from '../../types';
 import { CONTENT_STATUSES } from '../../types';
 import { toast } from '../ui/Toast';
-import { formatDate } from '../../lib/utils';
+import { formatDate, generateId } from '../../lib/utils';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { logActivity } from '../../lib/auditLogger';
 
@@ -28,7 +28,19 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   const [title, setTitle]       = useState(item?.title ?? '');
   const [categoryId, setCatId]  = useState(item?.categoryId ?? cats[0]?.id ?? '');
   const [status, setStatus]     = useState<ContentStatus>(item?.status ?? 'Idea');
-  const [platforms, setPlatforms] = useState<string[]>(item?.platform ? [item.platform] : (plats[0] ? [plats[0].name] : []));
+  const [platforms, setPlatforms] = useState<string[]>(() => {
+    if (!item) {
+      return plats[0] ? [plats[0].name] : [];
+    }
+    const storeContent = useAppStore.getState().contentItems;
+    const related = storeContent.filter((c) => 
+      c.workspaceId === item.workspaceId && 
+      c.categoryId === item.categoryId &&
+      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
+      c.scheduleDate === item.scheduleDate
+    );
+    return related.length > 0 ? related.map(c => c.platform) : [item.platform];
+  });
   const [schedDate, setSchedDate] = useState(item?.scheduleDate ?? defaultDate ?? '');
   const [notes, setNotes]       = useState(item?.notes ?? '');
   const [referenceUrl, setReferenceUrl] = useState(item?.referenceUrl ?? '');
@@ -40,7 +52,10 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   const [formatType, setFormatType] = useState<ContentFormat>(item?.format ?? 'Video');
   const [tab, setTab]           = useState<'detail' | 'performance'>('detail');
   const [delConfirm, setDelConfirm] = useState(false);
-  const [mode, setMode]         = useState<'view' | 'edit'>(item ? 'view' : 'edit');
+  const [mode, setMode] = useState<'view' | 'edit'>(item ? 'view' : 'edit');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringDays, setRecurringDays] = useState<number[]>([]);
+  const [recurringWeeks, setRecurringWeeks] = useState(4);
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -100,24 +115,109 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
       } : undefined,
     };
 
+    const storeContent = useAppStore.getState().contentItems;
+    const related = item ? storeContent.filter((c) => 
+      c.workspaceId === item.workspaceId && 
+      c.categoryId === item.categoryId &&
+      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
+      c.scheduleDate === item.scheduleDate
+    ) : [];
+
     if (isEdit) {
-      updateContent(item.id, {
-        ...basePayload,
-        platform: platforms[0],
-      });
+      const originalItems = JSON.parse(JSON.stringify(related));
+      const addedIds: string[] = [];
+
+      // 1. Update existing platforms or add new ones
+      for (const plat of platforms) {
+        const existingItem = related.find(c => c.platform.toLowerCase() === plat.toLowerCase());
+        if (existingItem) {
+          updateContent(existingItem.id, {
+            ...basePayload,
+            platform: plat,
+          });
+        } else {
+          const newId = generateId();
+          addedIds.push(newId);
+          addContent({
+            ...basePayload,
+            id: newId,
+            platform: plat,
+          });
+        }
+      }
+
+      // 2. Delete deselected platforms
+      for (const oldItem of related) {
+        const stillSelected = platforms.some(p => p.toLowerCase() === oldItem.platform.toLowerCase());
+        if (!stillSelected) {
+          deleteContent(oldItem.id);
+        }
+      }
+
       const statusChanged = item.status !== status;
       const details = statusChanged ? `Ubah status: ${item.status} -> ${status}` : 'Mengedit detail/performa konten';
-      logActivity('Mengubah Konten', title.trim(), details);
+      
+      const restorePayload = {
+        type: 'edit_content',
+        originalItems,
+        addedIds
+      };
+
+      logActivity('Mengubah Konten', title.trim(), details, restorePayload);
       toast.success('Konten berhasil diperbarui');
     } else {
-      for (const plat of platforms) {
-        addContent({
-          ...basePayload,
-          platform: plat,
-        });
-        logActivity('Menambah Konten', title.trim(), `Platform: ${plat}, Status: ${status}`);
+      const addedIds: string[] = [];
+      const datesToAdd: string[] = [];
+      
+      if (isRecurring && recurringDays.length > 0) {
+        const start = new Date(schedDate || new Date().toLocaleDateString('en-CA'));
+        const startDay = start.getDay();
+        const weeks = Math.min(Math.max(recurringWeeks || 1, 1), 12);
+
+        for (let w = 0; w < weeks; w++) {
+          for (const day of recurringDays) {
+            let diff = day - startDay;
+            if (diff < 0) diff += 7;
+            const occurrenceDate = new Date(start.getTime() + (diff + w * 7) * 24 * 60 * 60 * 1000);
+            const dateStr = occurrenceDate.toLocaleDateString('en-CA');
+            datesToAdd.push(dateStr);
+          }
+        }
+      } else {
+        datesToAdd.push(schedDate || new Date().toLocaleDateString('en-CA'));
       }
-      toast.success(`Berhasil menambahkan ${platforms.length} konten`);
+
+      for (const dStr of datesToAdd) {
+        for (const plat of platforms) {
+          const newId = generateId();
+          addedIds.push(newId);
+          addContent({
+            ...basePayload,
+            id: newId,
+            platform: plat,
+            scheduleDate: dStr,
+          });
+        }
+      }
+
+      const restorePayload = {
+        type: 'add_content',
+        addedIds
+      };
+
+      logActivity(
+        isRecurring ? 'Menambah Konten (Berulang)' : 'Menambah Konten', 
+        title.trim(), 
+        isRecurring
+          ? `Platform: ${platforms.join(', ')}, Durasi: ${recurringWeeks} minggu`
+          : `Platform: ${platforms.join(', ')}, Status: ${status}`, 
+        restorePayload
+      );
+      toast.success(
+        isRecurring 
+          ? `Berhasil menjadwalkan ${addedIds.length} konten berulang`
+          : `Berhasil menambahkan ${platforms.length} konten`
+      );
     }
     onClose();
   };
@@ -125,6 +225,11 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   const handleSave = () => {
     if (!title.trim()) { toast.error('Judul tidak boleh kosong'); return; }
     if (platforms.length === 0) { toast.error('Pilih minimal satu platform'); return; }
+
+    if (isRecurring && recurringDays.length === 0) {
+      toast.error('Pilih minimal satu hari untuk pengulangan');
+      return;
+    }
 
     if (status === 'Published') {
       const todayStr = new Date().toLocaleDateString('en-CA');
@@ -170,9 +275,34 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   };
 
   const handleDelete = () => {
-    deleteContent(item!.id);
-    logActivity('Menghapus Konten', item!.title, `Platform: ${item!.platform}`);
-    toast.success('Konten dihapus');
+    const storeContent = useAppStore.getState().contentItems;
+    const related = item ? storeContent.filter((c) => 
+      c.workspaceId === item.workspaceId && 
+      c.categoryId === item.categoryId &&
+      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
+      c.scheduleDate === item.scheduleDate
+    ) : [];
+
+    const itemsToDelete = related.length > 0 ? related : (item ? [item] : []);
+
+    for (const dItem of itemsToDelete) {
+      deleteContent(dItem.id);
+    }
+
+    if (itemsToDelete.length > 0) {
+      const restorePayload = {
+        type: 'delete_content',
+        items: itemsToDelete
+      };
+      logActivity(
+        'Menghapus Konten', 
+        itemsToDelete[0].title, 
+        `Platform: ${itemsToDelete.map(r => r.platform).join(', ')}`, 
+        restorePayload
+      );
+    }
+    
+    toast.success('Konten berhasil dihapus');
     onClose();
   };
 
@@ -223,9 +353,22 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
 
               {/* Badges Row */}
               <div className="flex flex-wrap gap-2 mt-1">
-                <span className="px-2.5 py-1 rounded bg-[var(--bg-secondary)] text-[11px] font-semibold border text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-color)' }}>
-                  Platform: {platforms[0]}
-                </span>
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-xs font-semibold text-[var(--text-secondary)] mr-1">Platform:</span>
+                  {platforms.map((plat) => {
+                    const platData = plats.find(p => p.name.toLowerCase() === plat.toLowerCase());
+                    const pColor = platData?.color ?? '#8E8E93';
+                    return (
+                      <span 
+                        key={plat} 
+                        className="px-2 py-0.5 rounded text-[10px] font-bold text-white" 
+                        style={{ background: pColor }}
+                      >
+                        {plat}
+                      </span>
+                    );
+                  })}
+                </div>
                 {(() => {
                   const cat = cats.find((c) => c.id === categoryId);
                   return cat ? (
@@ -356,72 +499,122 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
               </div>
 
               {/* Platform + Date row */}
-              {isEdit ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="form-group">
-                    <label className="form-label">Platform</label>
-                    <select className="input select" value={platforms[0] ?? ''} onChange={(e) => setPlatforms([e.target.value])}>
-                      {plats.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Jadwal Posting</label>
-                    <input
-                      type="date"
-                      className="input"
-                      value={schedDate}
-                      onChange={(e) => setSchedDate(e.target.value)}
-                    />
+              <div className="flex flex-col gap-3">
+                <div className="form-group">
+                  <label className="form-label">Platform Target (Bisa pilih lebih dari 1) *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {plats.map((p) => {
+                      const selected = platforms.includes(p.name);
+                      const accentColor = '#007AFF'; // Uniform blue color for active platform selection
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                          style={{
+                            background: selected ? `${accentColor}18` : 'var(--bg-tertiary)',
+                            color:      selected ? accentColor : 'var(--text-tertiary)',
+                            border:     `1px solid ${selected ? accentColor + '40' : 'transparent'}`,
+                          }}
+                          onClick={() => {
+                            if (selected) {
+                              if (platforms.length > 1) {
+                                setPlatforms(platforms.filter((val) => val !== p.name));
+                              } else {
+                                toast.warning('Minimal pilih satu platform');
+                              }
+                            } else {
+                              setPlatforms([...platforms, p.name]);
+                            }
+                          }}
+                        >
+                          {p.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <div className="form-group">
-                    <label className="form-label">Platform Target (Bisa pilih lebih dari 1) *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {plats.map((p) => {
-                        const selected = platforms.includes(p.name);
-                        const accentColor = '#007AFF'; // Uniform blue color for active platform selection
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                            style={{
-                              background: selected ? `${accentColor}18` : 'var(--bg-tertiary)',
-                              color:      selected ? accentColor : 'var(--text-tertiary)',
-                              border:     `1.5px solid ${selected ? accentColor + '40' : 'transparent'}`,
-                            }}
-                            onClick={() => {
-                              if (selected) {
-                                  setPlatforms(platforms.filter((val) => val !== p.name));
-                              } else {
-                                  setPlatforms([...platforms, p.name]);
-                              }
-                            }}
-                          >
-                            {p.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {platforms.length > 1 && (
-                      <p className="text-[10px] mt-1" style={{ color: 'var(--text-quaternary)' }}>
-                        Konten terpisah akan dibuat untuk setiap platform terpilih agar performa dapat dilacak masing-masing.
-                      </p>
+                <div className="form-group">
+                  <label className="form-label">Jadwal Posting</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={schedDate}
+                    onChange={(e) => setSchedDate(e.target.value)}
+                  />
+                </div>
+
+                {!isEdit && (
+                  <div className="form-group border-t border-[var(--border-color)] pt-3 mt-1">
+                    <label className="flex items-center gap-2 cursor-pointer mb-2">
+                      <input
+                        type="checkbox"
+                        checked={isRecurring}
+                        onChange={(e) => setIsRecurring(e.target.checked)}
+                        className="rounded border-[var(--border-color)] text-[var(--color-blue)]"
+                        style={{ width: '14px', height: '14px' }}
+                      />
+                      <span className="text-xs font-semibold text-[var(--text-secondary)]">Buat Jadwal Berulang (Recurring)</span>
+                    </label>
+
+                    {isRecurring && (
+                      <div className="flex flex-col gap-3 mt-3 pl-4 border-l-2 border-[var(--color-blue)] animate-fade-in">
+                        <div className="form-group">
+                          <label className="form-label text-[10px] mb-1.5 uppercase tracking-wider text-[var(--text-tertiary)]">Hari Pengulangan</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { name: 'Sen', val: 1 },
+                              { name: 'Sel', val: 2 },
+                              { name: 'Rab', val: 3 },
+                              { name: 'Kam', val: 4 },
+                              { name: 'Jum', val: 5 },
+                              { name: 'Sab', val: 6 },
+                              { name: 'Min', val: 0 },
+                            ].map((dayObj) => {
+                              const isSelected = recurringDays.includes(dayObj.val);
+                              return (
+                                <button
+                                  key={dayObj.val}
+                                  type="button"
+                                  className="px-2.5 py-1 rounded text-[10px] font-bold transition-all"
+                                  style={{
+                                    background: isSelected ? 'var(--color-blue)' : 'var(--bg-tertiary)',
+                                    color: isSelected ? '#fff' : 'var(--text-secondary)',
+                                  }}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setRecurringDays(recurringDays.filter(d => d !== dayObj.val));
+                                    } else {
+                                      setRecurringDays([...recurringDays, dayObj.val]);
+                                    }
+                                  }}
+                                >
+                                  {dayObj.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label text-[10px] mb-1 uppercase tracking-wider text-[var(--text-tertiary)]">Durasi Pengulangan (Minggu)</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="1"
+                              max="12"
+                              className="input py-1 px-2.5 text-xs"
+                              style={{ width: 70 }}
+                              value={recurringWeeks}
+                              onChange={(e) => setRecurringWeeks(Math.min(12, Math.max(1, parseInt(e.target.value) || 1)))}
+                            />
+                            <span className="text-xs text-[var(--text-tertiary)]">minggu ke depan</span>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Jadwal Posting</label>
-                    <input
-                      type="date"
-                      className="input"
-                      value={schedDate}
-                      onChange={(e) => setSchedDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Link Konten Upload */}
               <div className="form-group">

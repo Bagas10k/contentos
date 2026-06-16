@@ -59,15 +59,14 @@ export function Sidebar() {
         {/* ── Logo ── */}
         <div className="px-4 py-5 border-b" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white text-base font-bold flex-shrink-0"
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-9 h-9 rounded-[10px] object-cover flex-shrink-0"
               style={{
-                background: 'var(--gradient-primary)',
                 boxShadow: 'var(--glow-blue)',
               }}
-            >
-              C
-            </div>
+            />
             <div>
               <div
                 className="font-bold text-sm"
@@ -118,29 +117,16 @@ export function Sidebar() {
           </button>
 
           {wsOpen && (
-            <div
-              className="mt-1.5 rounded-[12px] overflow-hidden border animate-fade-in"
-              style={{
-                borderColor: 'var(--border-color)',
-                background: 'var(--bg-surface-elevated)',
-                boxShadow: 'var(--shadow-md)',
-              }}
-            >
+            <div className="dropdown-menu mt-1.5">
               {workspaces.map((ws) => {
                 const color = ws.color || '#0A84FF';
                 const isActive = ws.id === activeWorkspaceId;
                 return (
                   <button
                     key={ws.id}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all"
+                    className="dropdown-item"
                     style={{
-                      background: isActive ? `${color}12` : 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = isActive ? `${color}12` : 'transparent';
+                      background: isActive ? `${color}12` : undefined,
                     }}
                     onClick={() => {
                       setActiveWorkspace(ws.id);
@@ -175,22 +161,23 @@ export function Sidebar() {
                 );
               })}
               {isAdmin && (
-                <div className="border-t" style={{ borderColor: 'var(--border-color)' }}>
-                  <NavLink
-                    to="/settings"
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-all"
-                    style={{ color: 'var(--color-blue)' }}
-                    onClick={() => { setWsOpen(false); setSidebarOpen(false); }}
+                <div className="dropdown-divider" />
+              )}
+              {isAdmin && (
+                <NavLink
+                  to="/settings"
+                  className="dropdown-item"
+                  style={{ color: 'var(--color-blue)' }}
+                  onClick={() => { setWsOpen(false); setSidebarOpen(false); }}
+                >
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(10, 132, 255, 0.12)' }}
                   >
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(10, 132, 255, 0.12)' }}
-                    >
-                      <Plus size={11} style={{ color: 'var(--color-blue)' }} />
-                    </div>
-                    <span className="font-semibold">Tambah Workspace</span>
-                  </NavLink>
-                </div>
+                    <Plus size={11} style={{ color: 'var(--color-blue)' }} />
+                  </div>
+                  <span className="font-semibold">Tambah Workspace</span>
+                </NavLink>
               )}
             </div>
           )}

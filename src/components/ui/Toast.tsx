@@ -45,8 +45,9 @@ export function ToastProvider() {
         const Icon = icons[t.type];
         return (
           <div key={t.id} className={`toast ${t.type}`}>
-            <Icon size={16} />
-            {t.message}
+            <span className={`toast-pulse-${t.type}`} />
+            <Icon size={14} className={`toast-icon-${t.type}`} />
+            <span className="toast-message">{t.message}</span>
           </div>
         );
       })}

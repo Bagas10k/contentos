@@ -591,38 +591,156 @@ textarea.input { resize: vertical; min-height: 80px; }
 }
 .kanban-card:active { cursor: grabbing; transform: scale(1.02) rotate(1deg); }
 
-/* ─── Toast ─────────────────────────────────────────────── */
+/* ─── Toast (Dynamic Island Style) ───────────────────────── */
 .toast-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 200;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10100;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
+  pointer-events: none;
+  transition: top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.has-dynamic-island .toast-container {
+  top: 54px;
 }
 
 .toast {
-  background: rgba(28, 28, 30, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: #fff;
-  padding: 12px 18px;
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  background: rgba(10, 10, 12, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
-  gap: 10px;
-  animation: toastIn var(--dur-slow) var(--ease-spring), fadeOut 0.3s var(--ease-smooth) 2.7s forwards;
-  max-width: 340px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  gap: 8px;
+  max-width: 440px;
+  width: max-content;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: diToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
+             diToastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) 2.7s forwards;
+  transition: all 0.3s ease;
 }
 
-.toast.success { background: rgba(30, 90, 45, 0.95); border-color: rgba(48, 209, 88, 0.25); }
-.toast.error   { background: rgba(90, 20, 18, 0.95); border-color: rgba(255, 69, 58, 0.25); }
-.toast.warning { background: rgba(90, 55, 0, 0.95);  border-color: rgba(255, 159, 10, 0.25); }
+@media (max-width: 480px) {
+  .toast {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+.toast-message {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.toast.success { border-color: rgba(48, 209, 88, 0.30); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 12px rgba(48, 209, 88, 0.10); }
+.toast.error   { border-color: rgba(255, 69, 58, 0.30); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 69, 58, 0.10); }
+.toast.warning { border-color: rgba(255, 159, 10, 0.30); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 159, 10, 0.10); }
+.toast.info    { border-color: rgba(10, 132, 255, 0.30); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 12px rgba(10, 132, 255, 0.10); }
+
+/* Icons & Colors */
+.toast-icon-success { color: #30d158; flex-shrink: 0; }
+.toast-icon-error { color: #ff453a; flex-shrink: 0; }
+.toast-icon-warning { color: #ff9500; flex-shrink: 0; }
+.toast-icon-info { color: #0a84ff; flex-shrink: 0; }
+
+/* Status Pulses */
+.toast-pulse-success {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #30d158;
+  box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4);
+  animation: di-pulse-green 1.8s infinite;
+  flex-shrink: 0;
+}
+.toast-pulse-error {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #ff453a;
+  box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4);
+  animation: di-pulse-red 1.8s infinite;
+  flex-shrink: 0;
+}
+.toast-pulse-warning {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #ff9500;
+  box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4);
+  animation: di-pulse-orange 1.8s infinite;
+  flex-shrink: 0;
+}
+.toast-pulse-info {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #0a84ff;
+  box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.4);
+  animation: di-pulse-blue 1.8s infinite;
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes diToastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes diToastOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.92);
+  }
+}
+
+@keyframes di-pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.8); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+}
+
+@keyframes di-pulse-red {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.8); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 69, 58, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
+}
+
+@keyframes di-pulse-blue {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.8); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(10, 132, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(10, 132, 255, 0); }
+}
+
+@keyframes di-pulse-orange {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.8); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 149, 0, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
+}
 
 /* ─── Segmented Control ──────────────────────────────────── */
 .seg-control {
@@ -840,6 +958,106 @@ body.has-dynamic-island .sidebar { padding-top: 24px !important; }
 
 /* ─── iOS Radius Alias ───────────────────────────────────── */
 .rounded-ios { border-radius: var(--radius-ios) !important; }
+
+/* ─── Dropdown / Popover — Glassmorphism Standard ───────────── */
+/*
+  Gunakan .dropdown-menu untuk semua floating panel (popover, dropdown, context menu).
+  Ini memastikan konsistensi efek blur & border di seluruh aplikasi.
+*/
+.dropdown-menu {
+  background: var(--bg-surface-translucent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-ios);
+  box-shadow: var(--shadow-ios-md);
+  animation: scaleIn var(--dur-normal) var(--ease-spring) both;
+  transform-origin: top right;
+  overflow: hidden;
+}
+
+/* Item di dalam dropdown */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease-snappy),
+              color var(--dur-fast) var(--ease-snappy);
+  white-space: nowrap;
+}
+.dropdown-item:hover {
+  background: var(--bg-hover);
+}
+.dropdown-item:active {
+  background: var(--bg-hover);
+  transform: scale(0.98);
+}
+.dropdown-item.danger {
+  color: var(--color-red);
+}
+.dropdown-item.danger:hover {
+  background: var(--bg-hover-danger);
+}
+.dropdown-item + .dropdown-item {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Divider inside dropdown */
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+
+/* Section label inside dropdown */
+.dropdown-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-quaternary);
+  padding: 6px 14px 4px;
+  pointer-events: none;
+}
+
+/* ─── Tooltip / Floating Annotation ────────────────────────── */
+.tooltip {
+  background: var(--bg-surface-translucent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-ios-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ─── Recharts Custom Tooltip ───────────────────────────────── */
+.chart-tooltip {
+  background: var(--bg-surface-translucent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-ios);
+  box-shadow: var(--shadow-ios-md);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-primary);
+  min-width: 110px;
+}
 
 /* ─── Bottom Navigation Mobile (WA/IG Style) ──────────────── */
 .bottom-nav {

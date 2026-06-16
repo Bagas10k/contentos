@@ -5,7 +5,9 @@ import { Wifi, Laptop, Smartphone, Tablet, Monitor, ChevronRight, Bell, X, Folde
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/appStore';
 import { toast } from '../ui/Toast';
+import { logActivity } from '../../lib/auditLogger';
 import type { WorkspaceNote } from '../../types';
+import { showNativeNotification } from '../../lib/notifications';
 
 interface ActiveDevice {
   deviceId: string;
@@ -45,6 +47,7 @@ interface ActivityLog {
   targetName: string;
   details: string;
   timestamp: string;
+  restoreData?: string;
 }
 
 export function DynamicIsland() {
@@ -135,6 +138,14 @@ export function DynamicIsland() {
       const latest = unreadNotes[0];
       if (lastUnreadNoteIdRef.current && lastUnreadNoteIdRef.current !== latest.id) {
         setLatestNoteNotification(latest);
+        
+        // Trigger native browser notification
+        showNativeNotification(
+          `Pengumuman Baru: ${latest.title}`,
+          latest.content || 'Ada pemberitahuan penting dari Admin.',
+          `note-${latest.id}`
+        );
+
         const timer = setTimeout(() => {
           setLatestNoteNotification(null);
         }, 5000);
@@ -146,6 +157,42 @@ export function DynamicIsland() {
       lastUnreadNoteIdRef.current = null;
     }
   }, [unreadNotes]);
+
+  // Monitor tasks for new tasks or approaching deadlines
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const storedUser = localStorage.getItem('user');
+      const currentUser = storedUser ? JSON.parse(storedUser) : null;
+      if (!currentUser) return;
+
+      const myPendingTasks = tasks.filter(
+        (t) => t.assignedTo === currentUser.username && t.status === 'pending'
+      );
+
+      for (const t of myPendingTasks) {
+        // 1. Alert for new task assigned (created in the last 15 seconds)
+        const createdTime = new Date(t.createdAt).getTime();
+        const diffMs = Date.now() - createdTime;
+        if (diffMs > 0 && diffMs < 15000) {
+          showNativeNotification(
+            'Tugas Baru Ditugaskan',
+            `Anda ditugaskan: "${t.title}" oleh @${t.createdBy}`,
+            `task-new-${t.id}`
+          );
+        }
+
+        // 2. Alert for upcoming deadlines (Today/Tomorrow)
+        const lbl = getDeadlineLabel(t.deadline);
+        if (lbl && (lbl.text === 'Hari Ini' || lbl.text === 'Besok')) {
+          showNativeNotification(
+            `Tenggat Tugas: ${t.title}`,
+            `Tugas ini jatuh tempo ${lbl.text.toLowerCase()}. Silakan selesaikan segera.`,
+            `task-deadline-${t.id}-${lbl.text.toLowerCase()}`
+          );
+        }
+      }
+    }
+  }, [tasks]);
 
   // Parse user token and authenticate
   useEffect(() => {
@@ -223,6 +270,24 @@ export function DynamicIsland() {
       }
     } catch (e) {
       console.warn('[DynamicIsland] Gagal mengambil log:', e);
+    }
+  };
+
+  const handleRestore = async (log: ActivityLog) => {
+    if (!log.restoreData) return;
+    const success = await useAppStore.getState().restoreActivity(log.restoreData);
+    if (success) {
+      toast.success('Berhasil memulihkan data');
+      logActivity(
+        'Memulihkan Konten',
+        log.targetName,
+        `Memulihkan dari aksi: ${log.action}`
+      );
+      setTimeout(() => {
+        fetchLogs();
+      }, 500);
+    } else {
+      toast.error('Gagal memulihkan data');
     }
   };
 
@@ -635,12 +700,24 @@ export function DynamicIsland() {
                 ) : (
                   logs.map((log) => (
                     <div key={log.id} className="di-log-item">
-                      <div className="di-log-header">
-                        <span className="di-log-time">{formatLogTime(log.timestamp)}</span>
-                        <span className="di-log-user">@{log.username}</span>
-                        <span className="text-white text-opacity-95 font-semibold">{log.action}</span>
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <div className="flex-1 min-w-0">
+                          <div className="di-log-header">
+                            <span className="di-log-time">{formatLogTime(log.timestamp)}</span>
+                            <span className="di-log-user">@{log.username}</span>
+                            <span className="text-white text-opacity-95 font-semibold">{log.action}</span>
+                          </div>
+                          <p className="di-log-target truncate" title={log.targetName}>{log.targetName}</p>
+                        </div>
+                        {log.restoreData && (
+                          <button
+                            className="btn-di-restore"
+                            onClick={() => handleRestore(log)}
+                          >
+                            Restore
+                          </button>
+                        )}
                       </div>
-                      <p className="di-log-target" title={log.targetName}>{log.targetName}</p>
                     </div>
                   ))
                 )}
@@ -868,6 +945,25 @@ const islandStyles = `
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+  
+  .btn-di-restore {
+    background: rgba(0, 122, 255, 0.15);
+    border: 1px solid rgba(0, 122, 255, 0.3);
+    color: #0A84FF;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: center;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .btn-di-restore:hover {
+    background: rgba(0, 122, 255, 0.3);
+    color: white;
   }
   
   .di-log-header {

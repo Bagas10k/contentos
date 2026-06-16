@@ -303,11 +303,14 @@ interface AppStore extends AppState {
   deletePlatform: (id: string) => void;
 
   // Content actions
-  addContent: (item: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addContent: (item: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => void;
   updateContent: (id: string, item: Partial<ContentItem>) => void;
   deleteContent: (id: string) => void;
+  bulkDeleteContent: (ids: string[]) => void;
+  bulkUpdateContentStatus: (ids: string[], status: ContentStatus) => void;
+  bulkUpdateContentCategory: (ids: string[], categoryId: string) => void;
   moveContentStatus: (id: string, status: ContentStatus) => void;
-  bulkImportContent: (items: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>[], merge: boolean) => { imported: number; skipped: number };
+  bulkImportContent: (items: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>[], merge: boolean) => { imported: number; skipped: number; importedIds: string[] };
 
   // Analytics actions
   addAnalyticsSnapshot: (snap: Omit<AnalyticsSnapshot, 'id'>) => void;
@@ -323,6 +326,7 @@ interface AppStore extends AppState {
   // Utility
   restoreBackup: (state: AppState) => void;
   resetAll: () => void;
+  restoreActivity: (restoreData: string) => Promise<boolean>;
 
   // Sidebar toggle state
   isSidebarOpen: boolean;
@@ -420,7 +424,7 @@ export const useAppStore = create<AppStore>()(
     addContent: (item) => {
       const newItem: ContentItem = {
         ...item,
-        id: generateId(),
+        id: item.id || generateId(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -437,6 +441,37 @@ export const useAppStore = create<AppStore>()(
     },
     deleteContent: (id) => {
       set((s) => ({ contentItems: s.contentItems.filter((c) => c.id !== id) }));
+      saveState(get() as AppState);
+    },
+    bulkDeleteContent: (ids) => {
+      set((s) => ({ contentItems: s.contentItems.filter((c) => !ids.includes(c.id)) }));
+      saveState(get() as AppState);
+    },
+    bulkUpdateContentStatus: (ids, status) => {
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      set((s) => ({
+        contentItems: s.contentItems.map((c) => {
+          if (ids.includes(c.id)) {
+            const updated = { ...c, status, updatedAt: new Date().toISOString() };
+            if (status === 'Published' && !c.scheduleDate) {
+              updated.scheduleDate = todayStr;
+            }
+            return updated;
+          }
+          return c;
+        }),
+      }));
+      saveState(get() as AppState);
+    },
+    bulkUpdateContentCategory: (ids, categoryId) => {
+      set((s) => ({
+        contentItems: s.contentItems.map((c) => {
+          if (ids.includes(c.id)) {
+            return { ...c, categoryId, updatedAt: new Date().toISOString() };
+          }
+          return c;
+        }),
+      }));
       saveState(get() as AppState);
     },
     moveContentStatus: (id, status) => {
@@ -460,13 +495,16 @@ export const useAppStore = create<AppStore>()(
       let imported = 0;
       let skipped = 0;
       const toAdd: ContentItem[] = [];
+      const importedIds: string[] = [];
 
       for (const item of items) {
         const isDupe = existing.some(
           (e) => e.title.toLowerCase() === item.title.toLowerCase() && e.scheduleDate === item.scheduleDate
         );
         if (isDupe && merge) { skipped++; continue; }
-        toAdd.push({ ...item, id: generateId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        const newId = generateId();
+        toAdd.push({ ...item, id: newId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        importedIds.push(newId);
         imported++;
       }
 
@@ -476,7 +514,7 @@ export const useAppStore = create<AppStore>()(
         set((s) => ({ contentItems: [...s.contentItems, ...toAdd] }));
       }
       saveState(get() as AppState);
-      return { imported, skipped };
+      return { imported, skipped, importedIds };
     },
 
     // ── Analytics ──
@@ -589,6 +627,62 @@ export const useAppStore = create<AppStore>()(
     resetAll: () => {
       set(seedData);
       saveState(seedData);
+    },
+    restoreActivity: async (restoreDataString: string) => {
+      try {
+        if (!restoreDataString) return false;
+        const payload = JSON.parse(restoreDataString);
+        if (!payload || !payload.type) return false;
+
+        if (payload.type === 'add_content') {
+          const addedIds = payload.addedIds || [];
+          set((s) => ({
+            contentItems: s.contentItems.filter((item) => !addedIds.includes(item.id))
+          }));
+        } else if (payload.type === 'delete_content') {
+          const items = payload.items || [];
+          set((s) => {
+            const currentIds = new Set(s.contentItems.map(item => item.id));
+            const toAdd = items.filter((item: any) => !currentIds.has(item.id));
+            return {
+              contentItems: [...toAdd, ...s.contentItems]
+            };
+          });
+        } else if (payload.type === 'edit_content') {
+          const addedIds = payload.addedIds || [];
+          const originalItems = payload.originalItems || [];
+          set((s) => {
+            let updatedList = s.contentItems.filter((item) => !addedIds.includes(item.id));
+            for (const orig of originalItems) {
+              const index = updatedList.findIndex((item) => item.id === orig.id);
+              if (index > -1) {
+                updatedList = updatedList.map((item) => item.id === orig.id ? orig : item);
+              } else {
+                updatedList = [orig, ...updatedList];
+              }
+            }
+            return { contentItems: updatedList };
+          });
+        } else if (payload.type === 'status_content') {
+          const ids = payload.ids || [];
+          const oldStatus = payload.oldStatus;
+          set((s) => ({
+            contentItems: s.contentItems.map((item) =>
+              ids.includes(item.id)
+                ? { ...item, status: oldStatus, updatedAt: new Date().toISOString() }
+                : item
+            )
+          }));
+        } else {
+          return false;
+        }
+
+        saveState(get() as AppState);
+        return true;
+      } catch (err) {
+        console.error('[Store] Gagal memulihkan aktivitas:', err);
+        return false;
+      }
     },
 
     // ── Selectors ──

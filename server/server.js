@@ -91,6 +91,39 @@ setInterval(() => {
   }
 }, 15000);
 
+// Cleanup expired Local Share files (older than 24 hours)
+function performSharedFilesCleanup() {
+  try {
+    const allFiles = dbHelper.getSharedFiles();
+    const now = Date.now();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    
+    let deletedCount = 0;
+    for (const f of allFiles) {
+      const uploadTime = new Date(f.uploadedAt).getTime();
+      if (now - uploadTime > ONE_DAY_MS) {
+        // Delete physical file
+        const filePath = path.join(SHARED_UPLOAD_DIR, f.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+        // Delete from database
+        dbHelper.deleteSharedFile(f.id);
+        deletedCount++;
+      }
+    }
+    if (deletedCount > 0) {
+      console.log(`[Cleanup Job] Berhasil menghapus ${deletedCount} berkas Local Share yang kadaluwarsa (> 24 jam).`);
+    }
+  } catch (err) {
+    console.error('[Cleanup Job] Gagal melakukan pembersihan berkas Local Share:', err);
+  }
+}
+
+// Run shared files cleanup on startup and then every 1 hour
+setTimeout(performSharedFilesCleanup, 5000);
+setInterval(performSharedFilesCleanup, 3600000);
+
 // Middleware to verify JWT Token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -468,7 +501,7 @@ app.delete('/api/admin/backups/:filename', authenticateToken, requireAdmin, (req
 // Endpoint: Buat log aktivitas baru
 app.post('/api/activity-logs', authenticateToken, (req, res) => {
   try {
-    const { action, targetName, details } = req.body;
+    const { action, targetName, details, restoreData } = req.body;
     const username = req.user.username;
 
     if (!action || !targetName) {
@@ -478,7 +511,7 @@ app.post('/api/activity-logs', authenticateToken, (req, res) => {
     const id = 'log-' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
     const timestamp = new Date().toISOString();
 
-    dbHelper.createActivityLog(id, username, action, targetName, details, timestamp);
+    dbHelper.createActivityLog(id, username, action, targetName, details, timestamp, restoreData);
     return res.json({ success: true });
   } catch (error) {
     console.error('Error creating activity log:', error);
@@ -494,6 +527,47 @@ app.get('/api/admin/activity-logs', authenticateToken, requireAdmin, (req, res) 
   } catch (error) {
     console.error('Error fetching activity logs:', error);
     return res.status(500).json({ success: false, message: 'Gagal mengambil log aktivitas.' });
+  }
+});
+
+// Endpoint: Bersihkan seluruh log aktivitas (Admin saja)
+app.delete('/api/admin/activity-logs/clear', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    dbHelper.clearActivityLogs();
+    const logId = 'log-' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    dbHelper.createActivityLog(
+      logId,
+      req.user.username,
+      'Membersihkan Audit Logs',
+      'Seluruh Log Aktivitas',
+      'Menghapus semua histori log aktivitas dari database.',
+      new Date().toISOString()
+    );
+    return res.json({ success: true, message: 'Seluruh log aktivitas berhasil dibersihkan.' });
+  } catch (error) {
+    console.error('Error clearing activity logs:', error);
+    return res.status(500).json({ success: false, message: 'Gagal membersihkan log aktivitas.' });
+  }
+});
+
+// Endpoint: Pangkas log aktivitas (Admin saja)
+app.post('/api/admin/activity-logs/prune', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const keepCount = parseInt(req.body.keepCount) || 100;
+    dbHelper.pruneActivityLogsManual(keepCount);
+    const logId = 'log-' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    dbHelper.createActivityLog(
+      logId,
+      req.user.username,
+      'Memangkas Audit Logs',
+      `Menyisakan ${keepCount} log`,
+      `Menghapus log lama dan menyisakan ${keepCount} log aktivitas terbaru.`,
+      new Date().toISOString()
+    );
+    return res.json({ success: true, message: `Log aktivitas berhasil dipangkas (tersisa ${keepCount} log terbaru).` });
+  } catch (error) {
+    console.error('Error pruning activity logs:', error);
+    return res.status(500).json({ success: false, message: 'Gagal memangkas log aktivitas.' });
   }
 });
 
@@ -1002,9 +1076,25 @@ app.delete('/api/tasks/:id', authenticateToken, requireAdmin, (req, res) => {
 // Serve frontend build dynamically
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR));
+  app.use(express.static(DIST_DIR, {
+    setHeaders: (res, filePath) => {
+      const baseName = path.basename(filePath);
+      if (baseName === 'index.html' || baseName === 'sw.js' || baseName === 'manifest.json') {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else {
+        // Hashed assets can be cached for longer
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    }
+  }));
+
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.sendFile(path.join(DIST_DIR, 'index.html'));
     }
   });

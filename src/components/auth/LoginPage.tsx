@@ -81,15 +81,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       >
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div
-            className="w-16 h-16 rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mb-4"
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="w-16 h-16 rounded-[16px] object-cover mb-4"
             style={{
-              background: 'var(--gradient-primary)',
               boxShadow: 'var(--glow-blue)',
             }}
-          >
-            C
-          </div>
+          />
           <h1
             className="text-2xl font-bold"
             style={{

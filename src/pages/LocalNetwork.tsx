@@ -56,11 +56,17 @@ export default function LocalNetwork() {
     };
   };
 
+  const getApiUrl = (path: string) => {
+    const isDev = window.location.port && window.location.port !== '3001';
+    const host = window.location.hostname;
+    return isDev ? `${window.location.protocol}//${host}:3001${path}` : path;
+  };
+
   // Fetch active devices
   const fetchDevices = async (silent = false) => {
     if (!silent) setIsLoadingDevices(true);
     try {
-      const res = await fetch('/api/network/devices', { headers: getAuthHeaders() });
+      const res = await fetch(getApiUrl('/api/network/devices'), { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setDevices(data || []);
@@ -76,7 +82,7 @@ export default function LocalNetwork() {
   const fetchSharedFiles = async (silent = false) => {
     if (!silent) setIsLoadingFiles(true);
     try {
-      const res = await fetch('/api/network/shared-files', { headers: getAuthHeaders() });
+      const res = await fetch(getApiUrl('/api/network/shared-files'), { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setSharedFiles(data || []);
@@ -126,7 +132,7 @@ export default function LocalNetwork() {
     const token = localStorage.getItem('token');
     if (storedId && token) {
       try {
-        await fetch('/api/network/heartbeat', {
+        await fetch(getApiUrl('/api/network/heartbeat'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -163,7 +169,7 @@ export default function LocalNetwork() {
     formData.append('deviceName', storedName);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/network/upload', true);
+    xhr.open('POST', getApiUrl('/api/network/upload'), true);
     if (token) {
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     }
@@ -234,7 +240,7 @@ export default function LocalNetwork() {
     }
 
     try {
-      const res = await fetch(`/api/network/shared-files/${id}`, {
+      const res = await fetch(getApiUrl(`/api/network/shared-files/${id}`), {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -547,7 +553,7 @@ export default function LocalNetwork() {
                         const fileMeta = getFileIcon(file.mimeType, file.originalName);
                         const FileIcon = fileMeta.Icon;
                         const token = localStorage.getItem('token') || '';
-                        const downloadUrl = `/api/network/download/${file.id}?token=${encodeURIComponent(token)}`;
+                        const downloadUrl = getApiUrl(`/api/network/download/${file.id}?token=${encodeURIComponent(token)}`);
                         
                         return (
                           <tr key={file.id} className="border-b last:border-b-0 hover-bg-subtle transition-colors text-xs" style={{ borderColor: 'var(--border-color)' }}>

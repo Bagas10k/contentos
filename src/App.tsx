@@ -15,6 +15,7 @@ import Tasks from './pages/Tasks';
 import { DynamicIsland } from './components/layout/DynamicIsland';
 import { AnnouncementModal } from './components/content/AnnouncementModal';
 import { WifiOff, LayoutDashboard, Library, Kanban, Calendar, ClipboardList } from 'lucide-react';
+import { requestNotificationPermission } from './lib/notifications';
 
 function TitleUpdater() {
   const location = useLocation();
@@ -89,6 +90,7 @@ export default function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadStateFromServer();
+      requestNotificationPermission();
     }
   }, [loadStateFromServer, isAuthenticated]);
 
@@ -134,6 +136,7 @@ export default function App() {
   useEffect(() => {
     const handleLogout = () => {
       setIsAuthenticated(false);
+      toast.error('Sesi login Anda telah berakhir. Silakan masuk kembali.');
     };
     window.addEventListener('contentos-logout', handleLogout);
     return () => window.removeEventListener('contentos-logout', handleLogout);
@@ -236,6 +239,12 @@ export default function App() {
             userAgent: navigator.userAgent
           })
         });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.dispatchEvent(new CustomEvent('contentos-logout'));
+          return;
+        }
         if (res.ok) {
           setIsServerOffline(false);
         }
@@ -356,6 +365,13 @@ export default function App() {
           }
         });
 
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.dispatchEvent(new CustomEvent('contentos-logout'));
+          return;
+        }
+
         if (res.ok) {
           setIsServerOffline(false);
           const loaded = await res.json();
@@ -403,12 +419,12 @@ export default function App() {
       >
         <div className="flex flex-col items-center gap-4">
           {/* Logo */}
-          <div
-            className="w-14 h-14 rounded-[18px] flex items-center justify-center text-white text-2xl font-bold"
-            style={{ background: 'linear-gradient(135deg, #007AFF, #5856D6)', boxShadow: '0 4px 20px rgba(0,122,255,0.35)' }}
-          >
-            C
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="w-14 h-14 rounded-[16px] object-cover"
+            style={{ boxShadow: '0 4px 20px rgba(0,122,255,0.35)' }}
+          />
           {/* Spinner */}
           <div
             className="animate-spin rounded-full h-7 w-7 border-2"

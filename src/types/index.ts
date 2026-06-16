@@ -75,6 +75,11 @@ export interface ContentItem {
   updatedAt: string;
 }
 
+export interface GroupedContentItem extends ContentItem {
+  platforms: string[];
+  allIds: string[];
+}
+
 export interface ContentViewHistoryEntry {
   date: string;
   views: number;

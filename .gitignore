@@ -25,6 +25,8 @@ dist-ssr
 
 # Server databases, backups, uploads, cache and node_modules
 server/database.db
+server/database.db-shm
+server/database.db-wal
 server/backups/
 server/uploads/
 server/sync_cache.json

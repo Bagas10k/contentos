@@ -92,7 +92,8 @@ function initSchema() {
       action TEXT NOT NULL,
       targetName TEXT NOT NULL,
       details TEXT,
-      timestamp TEXT NOT NULL
+      timestamp TEXT NOT NULL,
+      restoreData TEXT
     );
 
     CREATE TABLE IF NOT EXISTS shared_files (
@@ -152,6 +153,13 @@ function initSchema() {
   } catch (e) {
     // Ignore error if column already exists
   }
+
+  // Migrate schema: Add restoreData column to activity_logs if not exists
+  try {
+    db.exec("ALTER TABLE activity_logs ADD COLUMN restoreData TEXT");
+  } catch (e) {
+    // Ignore error if column already exists
+  }
 }
 
 // Seed default admin user if users table is empty
@@ -197,12 +205,11 @@ function saveState(state) {
       insertCategory.run(cat.id, cat.workspaceId, cat.name, cat.color || '');
     }
 
-    // Save content_items
     const insertContent = db.prepare(`
       INSERT INTO content_items (
         id, workspaceId, title, categoryId, status, scheduleDate, platform, notes, referenceUrl,
         views, likes, comments, shares, saves, viewsHistory, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const item of state.contentItems || []) {
       const perf = item.performance || {};
@@ -422,9 +429,42 @@ function reopenDatabase() {
   db.exec('PRAGMA journal_mode = WAL;');
 }
 
-function createActivityLog(id, username, action, targetName, details, timestamp) {
-  const stmt = db.prepare('INSERT INTO activity_logs (id, username, action, targetName, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)');
-  return stmt.run(id, username, action, targetName, details || '', timestamp);
+function createActivityLog(id, username, action, targetName, details, timestamp, restoreData) {
+  const stmt = db.prepare('INSERT INTO activity_logs (id, username, action, targetName, details, timestamp, restoreData) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  const res = stmt.run(id, username, action, targetName, details || '', timestamp, restoreData || null);
+  
+  // Auto-prune activity logs: keep only the last 1000 entries to prevent database bloat
+  try {
+    db.exec(`
+      DELETE FROM activity_logs 
+      WHERE id NOT IN (
+        SELECT id FROM activity_logs 
+        ORDER BY timestamp DESC 
+        LIMIT 1000
+      )
+    `);
+  } catch (err) {
+    console.error('Failed to auto-prune activity logs:', err);
+  }
+  
+  return res;
+}
+
+function clearActivityLogs() {
+  const stmt = db.prepare('DELETE FROM activity_logs');
+  return stmt.run();
+}
+
+function pruneActivityLogsManual(keepCount = 100) {
+  const stmt = db.prepare(`
+    DELETE FROM activity_logs 
+    WHERE id NOT IN (
+      SELECT id FROM activity_logs 
+      ORDER BY timestamp DESC 
+      LIMIT ?
+    )
+  `);
+  return stmt.run(keepCount);
 }
 
 function getActivityLogs() {
@@ -497,6 +537,8 @@ module.exports = {
   deleteUser,
   updateUserPassword,
   createActivityLog,
+  clearActivityLogs,
+  pruneActivityLogsManual,
   getActivityLogs,
   createSharedFile,
   getSharedFiles,
