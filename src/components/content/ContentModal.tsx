@@ -475,8 +475,8 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
                 const totalSaves = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.saves) || 0), 0);
 
                 return status === 'Published' && (
-                  <div className="flex flex-col gap-2 mt-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
-                    <span className="text-[10px] uppercase font-bold text-[var(--text-quaternary)]">Total Statistik Performa ({platforms.join(' + ')})</span>
+                  <div className="flex flex-col gap-3 mt-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-quaternary)]">Total Statistik Performa</span>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {[
                         { label: 'Views', val: totalViews.toString() },
@@ -491,6 +491,36 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
                         </div>
                       ))}
                     </div>
+
+                    {/* Breakdown per Platform */}
+                    {platforms.length > 1 && (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <span className="text-[9px] uppercase font-bold text-[var(--text-quaternary)]">Rincian Per Platform</span>
+                        <div className="flex flex-col gap-1.5">
+                          {platforms.map((platName) => {
+                            const perf = perfByPlatform[platName] || { views: '0', likes: '0', comments: '0', shares: '0', saves: '0' };
+                            const platData = plats.find(p => p.name.toLowerCase() === platName.toLowerCase());
+                            const pColor = platData?.color ?? '#8E8E93';
+
+                            return (
+                              <div key={platName} className="flex items-center justify-between text-[11px] p-2 rounded border bg-[var(--bg-secondary)]" style={{ borderColor: 'var(--border-color)' }}>
+                                <div className="flex items-center gap-1.5 font-bold">
+                                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: pColor }} />
+                                  <span style={{ color: 'var(--text-primary)' }}>{platName}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-[var(--text-secondary)] font-medium">
+                                  <span>👁️ {parseInt(perf.views || '0').toLocaleString('id-ID')}</span>
+                                  <span>❤️ {parseInt(perf.likes || '0').toLocaleString('id-ID')}</span>
+                                  <span>💬 {parseInt(perf.comments || '0').toLocaleString('id-ID')}</span>
+                                  <span>🔄 {parseInt(perf.shares || '0').toLocaleString('id-ID')}</span>
+                                  <span>💾 {parseInt(perf.saves || '0').toLocaleString('id-ID')}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
