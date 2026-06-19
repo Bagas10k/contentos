@@ -374,8 +374,8 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
           </button>
         </div>
 
-        {/* Tabs (for edit mode) */}
-        {mode === 'edit' && isEdit && (
+        {/* Tabs (shown when editing, OR when creating a new item with status 'Published') */}
+        {mode === 'edit' && (isEdit || status === 'Published') && (
           <div className="px-6 pt-3">
             <div className="seg-control">
               <button className={`seg-btn ${tab === 'detail' ? 'active' : ''}`} onClick={() => setTab('detail')}>Detail</button>
@@ -552,7 +552,17 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
                 </div>
                 <div className="form-group">
                   <label className="form-label">Status</label>
-                  <select className="input select" value={status} onChange={(e) => setStatus(e.target.value as ContentStatus)}>
+                  <select 
+                    className="input select" 
+                    value={status} 
+                    onChange={(e) => {
+                      const newStatus = e.target.value as ContentStatus;
+                      setStatus(newStatus);
+                      if (newStatus !== 'Published' && !isEdit) {
+                        setTab('detail');
+                      }
+                    }}
+                  >
                     {CONTENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
