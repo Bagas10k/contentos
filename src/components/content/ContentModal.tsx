@@ -44,11 +44,35 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   const [schedDate, setSchedDate] = useState(item?.scheduleDate ?? defaultDate ?? '');
   const [notes, setNotes]       = useState(item?.notes ?? '');
   const [referenceUrl, setReferenceUrl] = useState(item?.referenceUrl ?? '');
-  const [views, setViews]       = useState(item?.performance?.views?.toString() ?? '');
-  const [likes, setLikes]       = useState(item?.performance?.likes?.toString() ?? '');
-  const [comments, setComments] = useState(item?.performance?.comments?.toString() ?? '');
-  const [shares, setShares]     = useState(item?.performance?.shares?.toString() ?? '');
-  const [saves, setSaves]       = useState(item?.performance?.saves?.toString() ?? '');
+  const [perfByPlatform, setPerfByPlatform] = useState<Record<string, {
+    views: string;
+    likes: string;
+    comments: string;
+    shares: string;
+    saves: string;
+  }>>(() => {
+    const storeContent = useAppStore.getState().contentItems;
+    const related = item ? storeContent.filter((c) => 
+      c.workspaceId === item.workspaceId && 
+      c.categoryId === item.categoryId &&
+      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
+      c.scheduleDate === item.scheduleDate
+    ) : [];
+    
+    const perfMap: Record<string, any> = {};
+    if (item) {
+      related.forEach((c) => {
+        perfMap[c.platform] = {
+          views: c.performance?.views?.toString() ?? '',
+          likes: c.performance?.likes?.toString() ?? '',
+          comments: c.performance?.comments?.toString() ?? '',
+          shares: c.performance?.shares?.toString() ?? '',
+          saves: c.performance?.saves?.toString() ?? '',
+        };
+      });
+    }
+    return perfMap;
+  });
   const [formatType, setFormatType] = useState<ContentFormat>(item?.format ?? 'Video');
   const [tab, setTab]           = useState<'detail' | 'performance'>('detail');
   const [delConfirm, setDelConfirm] = useState(false);
@@ -83,18 +107,13 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
   }, [plats, platforms.length, item]);
 
   const executeSave = () => {
-    let updatedViewsHistory = item?.performance?.viewsHistory ? [...item.performance.viewsHistory] : [];
-    const newViews = parseInt(views) || 0;
-    if (newViews > 0) {
-      const todayStr = new Date().toLocaleDateString('en-CA');
-      const existingIdx = updatedViewsHistory.findIndex((e) => e.date === todayStr);
-      if (existingIdx > -1) {
-        updatedViewsHistory[existingIdx] = { ...updatedViewsHistory[existingIdx], views: newViews };
-      } else {
-        updatedViewsHistory.push({ date: todayStr, views: newViews });
-      }
-      updatedViewsHistory.sort((a, b) => a.date.localeCompare(b.date));
-    }
+    const storeContent = useAppStore.getState().contentItems;
+    const related = item ? storeContent.filter((c) => 
+      c.workspaceId === item.workspaceId && 
+      c.categoryId === item.categoryId &&
+      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
+      c.scheduleDate === item.scheduleDate
+    ) : [];
 
     const basePayload = {
       workspaceId: activeWorkspaceId!,
@@ -105,23 +124,7 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
       scheduleDate: schedDate || undefined,
       notes: notes || undefined,
       referenceUrl: referenceUrl.trim() || undefined,
-      performance: (views || likes || comments || shares || saves) ? {
-        views:    newViews,
-        likes:    parseInt(likes) || 0,
-        comments: parseInt(comments) || 0,
-        shares:   parseInt(shares) || 0,
-        saves:    parseInt(saves) || 0,
-        viewsHistory: updatedViewsHistory,
-      } : undefined,
     };
-
-    const storeContent = useAppStore.getState().contentItems;
-    const related = item ? storeContent.filter((c) => 
-      c.workspaceId === item.workspaceId && 
-      c.categoryId === item.categoryId &&
-      c.title.toLowerCase().trim() === item.title.toLowerCase().trim() &&
-      c.scheduleDate === item.scheduleDate
-    ) : [];
 
     if (isEdit) {
       const originalItems = JSON.parse(JSON.stringify(related));
@@ -130,18 +133,45 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
       // 1. Update existing platforms or add new ones
       for (const plat of platforms) {
         const existingItem = related.find(c => c.platform.toLowerCase() === plat.toLowerCase());
+        const perf = perfByPlatform[plat] || { views: '', likes: '', comments: '', shares: '', saves: '' };
+        
+        const newViews = parseInt(perf.views) || 0;
+        let updatedViewsHistory = existingItem?.performance?.viewsHistory ? [...existingItem.performance.viewsHistory] : [];
+        
+        if (newViews > 0) {
+          const todayStr = new Date().toLocaleDateString('en-CA');
+          const existingIdx = updatedViewsHistory.findIndex((e) => e.date === todayStr);
+          if (existingIdx > -1) {
+            updatedViewsHistory[existingIdx] = { ...updatedViewsHistory[existingIdx], views: newViews };
+          } else {
+            updatedViewsHistory.push({ date: todayStr, views: newViews });
+          }
+          updatedViewsHistory.sort((a, b) => a.date.localeCompare(b.date));
+        }
+
+        const platformPerformance = (perf.views || perf.likes || perf.comments || perf.shares || perf.saves) ? {
+          views:    newViews,
+          likes:    parseInt(perf.likes) || 0,
+          comments: parseInt(perf.comments) || 0,
+          shares:   parseInt(perf.shares) || 0,
+          saves:    parseInt(perf.saves) || 0,
+          viewsHistory: updatedViewsHistory,
+        } : undefined;
+
+        const payload = {
+          ...basePayload,
+          platform: plat,
+          performance: platformPerformance,
+        };
+
         if (existingItem) {
-          updateContent(existingItem.id, {
-            ...basePayload,
-            platform: plat,
-          });
+          updateContent(existingItem.id, payload);
         } else {
           const newId = generateId();
           addedIds.push(newId);
           addContent({
-            ...basePayload,
+            ...payload,
             id: newId,
-            platform: plat,
           });
         }
       }
@@ -191,11 +221,24 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
         for (const plat of platforms) {
           const newId = generateId();
           addedIds.push(newId);
+
+          const perf = perfByPlatform[plat] || { views: '', likes: '', comments: '', shares: '', saves: '' };
+          const newViews = parseInt(perf.views) || 0;
+          const platformPerformance = (perf.views || perf.likes || perf.comments || perf.shares || perf.saves) ? {
+            views:    newViews,
+            likes:    parseInt(perf.likes) || 0,
+            comments: parseInt(perf.comments) || 0,
+            shares:   parseInt(perf.shares) || 0,
+            saves:    parseInt(perf.saves) || 0,
+            viewsHistory: newViews > 0 ? [{ date: dStr, views: newViews }] : [],
+          } : undefined;
+
           addContent({
             ...basePayload,
             id: newId,
             platform: plat,
             scheduleDate: dStr,
+            performance: platformPerformance,
           });
         }
       }
@@ -424,25 +467,33 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
               )}
 
               {/* Performance Statistics */}
-              {status === 'Published' && (
-                <div className="flex flex-col gap-2 mt-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
-                  <span className="text-[10px] uppercase font-bold text-[var(--text-quaternary)]">Statistik Performa Konten</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {[
-                      { label: 'Views', val: views || '0' },
-                      { label: 'Likes', val: likes || '0' },
-                      { label: 'Comments', val: comments || '0' },
-                      { label: 'Shares', val: shares || '0' },
-                      { label: 'Saves', val: saves || '0' },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="p-2 rounded border bg-[var(--bg-surface)] text-center flex flex-col gap-0.5" style={{ borderColor: 'var(--border-color)' }}>
-                        <span className="text-[9px] text-[var(--text-quaternary)]">{label}</span>
-                        <span className="text-xs font-bold text-[var(--text-primary)]">{parseInt(val).toLocaleString('id-ID')}</span>
-                      </div>
-                    ))}
+              {(() => {
+                const totalViews = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.views) || 0), 0);
+                const totalLikes = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.likes) || 0), 0);
+                const totalComments = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.comments) || 0), 0);
+                const totalShares = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.shares) || 0), 0);
+                const totalSaves = Object.values(perfByPlatform).reduce((sum, p) => sum + (parseInt(p.saves) || 0), 0);
+
+                return status === 'Published' && (
+                  <div className="flex flex-col gap-2 mt-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-quaternary)]">Total Statistik Performa ({platforms.join(' + ')})</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {[
+                        { label: 'Views', val: totalViews.toString() },
+                        { label: 'Likes', val: totalLikes.toString() },
+                        { label: 'Comments', val: totalComments.toString() },
+                        { label: 'Shares', val: totalShares.toString() },
+                        { label: 'Saves', val: totalSaves.toString() },
+                      ].map(({ label, val }) => (
+                        <div key={label} className="p-2 rounded border bg-[var(--bg-surface)] text-center flex flex-col gap-0.5" style={{ borderColor: 'var(--border-color)' }}>
+                          <span className="text-[9px] text-[var(--text-quaternary)]">{label}</span>
+                          <span className="text-xs font-bold text-[var(--text-primary)]">{parseInt(val).toLocaleString('id-ID')}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           ) : tab === 'detail' ? (
             <div className="flex flex-col gap-4">
@@ -641,24 +692,55 @@ export function ContentModal({ item, defaultDate, onClose }: ContentModalProps) 
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                Masukkan data performa setelah konten dipublish.
+            <div className="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin">
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Masukkan data performa setelah konten dipublish untuk masing-masing platform.
               </p>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Views', val: views, set: setViews },
-                  { label: 'Likes', val: likes, set: setLikes },
-                  { label: 'Comments', val: comments, set: setComments },
-                  { label: 'Shares', val: shares, set: setShares },
-                  { label: 'Saves (Simpan)', val: saves, set: setSaves },
-                ].map(({ label, val, set }) => (
-                  <div key={label} className="form-group">
-                    <label className="form-label">{label}</label>
-                    <input type="number" className="input" placeholder="0" value={val} onChange={(e) => set(e.target.value)} />
+              {platforms.map((platName) => {
+                const perf = perfByPlatform[platName] || { views: '', likes: '', comments: '', shares: '', saves: '' };
+                const updatePerfField = (field: string, value: string) => {
+                  setPerfByPlatform(prev => ({
+                    ...prev,
+                    [platName]: {
+                      ...perf,
+                      [field]: value
+                    }
+                  }));
+                };
+
+                return (
+                  <div key={platName} className="p-3.5 rounded-[12px] border" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#007AFF' }} />
+                      <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+                        {platName}
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2.5">
+                      {[
+                        { label: 'Views', field: 'views' },
+                        { label: 'Likes', field: 'likes' },
+                        { label: 'Comments', field: 'comments' },
+                        { label: 'Shares', field: 'shares' },
+                        { label: 'Saves', field: 'saves' },
+                      ].map(({ label, field }) => (
+                        <div key={field} className="form-group mb-0">
+                          <label className="text-[10px] font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
+                            {label}
+                          </label>
+                          <input
+                            type="number"
+                            className="input py-1 px-2 text-xs w-full"
+                            placeholder="0"
+                            value={perf[field as keyof typeof perf] || ''}
+                            onChange={(e) => updatePerfField(field, e.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           )}
         </div>
