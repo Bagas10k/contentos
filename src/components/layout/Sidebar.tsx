@@ -248,6 +248,9 @@ export function Sidebar() {
               <LogOut size={16} />
             </button>
           </div>
+          <div className="mt-3 text-[9px] text-center copyright-text animate-fade-in" style={{ color: 'var(--text-quaternary)', opacity: 0.8 }}>
+            © {new Date().getFullYear()} ContentOS • Dibuat oleh Bagas
+          </div>
         </div>
       </aside>
     </>

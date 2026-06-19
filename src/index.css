@@ -208,6 +208,7 @@
 :root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between button { display: none !important; }
 :root[data-sidebar="compact"] .sidebar .flex.items-center.gap-2\.5 { justify-content: center; gap: 0 !important; }
 :root[data-sidebar="compact"] .sidebar .flex.items-center.justify-between .min-w-0 { display: none !important; }
+:root[data-sidebar="compact"] .sidebar .copyright-text { display: none !important; }
 
 /* ─── Base ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
